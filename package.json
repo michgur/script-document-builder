@@ -1,0 +1,64 @@
+{
+  "name": "call-script-editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "tsc -b && vp build",
+    "check": "vp check",
+    "check:fix": "vp check --fix",
+    "lint": "vp lint",
+    "fmt": "vp fmt",
+    "fmt:fix": "vp fmt --fix",
+    "test": "vp test",
+    "preview": "vp preview",
+    "prepare": "vp config"
+  },
+  "dependencies": {
+    "@ariakit/react": "^0.4.24",
+    "@tiptap/core": "^3.21.0",
+    "@tiptap/extension-document": "^3.21.0",
+    "@tiptap/extension-drag-handle-react": "^3.21.0",
+    "@tiptap/extension-dropcursor": "^3.21.0",
+    "@tiptap/extension-gapcursor": "^3.21.0",
+    "@tiptap/extension-hard-break": "^3.21.0",
+    "@tiptap/extension-history": "^3.21.0",
+    "@tiptap/extension-paragraph": "^3.21.0",
+    "@tiptap/extension-placeholder": "^3.21.0",
+    "@tiptap/extension-text": "^3.21.0",
+    "@tiptap/pm": "^3.22.1",
+    "@tiptap/react": "^3.21.0",
+    "@tiptap/suggestion": "^3.21.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.7.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.2",
+    "tailwind-merge": "^3.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^24.12.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.57.0",
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vite-plus": "latest"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "overrides": {
+      "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+      "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+    }
+  }
+}
