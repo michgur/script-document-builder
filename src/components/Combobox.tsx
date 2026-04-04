@@ -32,7 +32,7 @@ export function Combobox({
   };
 
   return (
-    <Ariakit.ComboboxProvider value={value} setValue={setValue}>
+    <Ariakit.ComboboxProvider value={value} setValue={setValue} open={true}>
       <div role="combobox" ref={wrapperRef} className="relative">
         <Ariakit.Combobox
           {...props}

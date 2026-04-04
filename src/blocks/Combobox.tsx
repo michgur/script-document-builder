@@ -2,8 +2,9 @@ import { Node } from "@tiptap/core";
 import type { Attribute, NodeViewProps } from "@tiptap/core";
 import { NodeSelection } from "@tiptap/pm/state";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import { useComboboxOptions } from "../lib/comboboxOptionsStore";
 import { cn } from "../lib/utils";
-import { Combobox as ComboboxPrimitive } from "../ui/Combobox";
+import { Combobox as ComboboxPrimitive } from "../components/Combobox";
 
 function nodeDataAttr(name: string, defaultValue = ""): Attribute {
   const attr = `data-${name}`;
@@ -75,10 +76,21 @@ export const ComboboxNode = Node.create({
 function ComboboxView({ node, selected, editor, getPos }: NodeViewProps) {
   const value = String(node.attrs.value ?? "");
   const placeholder = String(node.attrs.placeholder ?? "");
-  const options = String(node.attrs.options ?? "")
+  const staticOptions = String(node.attrs.options ?? "")
     .split("\n")
     .map((opt) => opt.trim())
     .filter(Boolean);
+  let positionKey = "";
+  try {
+    const pos = getPos();
+    if (typeof pos === "number") {
+      positionKey = `${node.type.name}.${pos}`;
+    }
+  } catch {
+    positionKey = "";
+  }
+  const dynamicOptions = useComboboxOptions(positionKey);
+  const options = staticOptions.length > 0 ? staticOptions : dynamicOptions;
   const editing = Boolean(node.attrs.editing);
 
   const setEditing = (nextEditing: boolean, nextValue = value) => {

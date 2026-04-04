@@ -134,16 +134,31 @@ export const BranchCaseNode = Node.create({
       },
       Enter: ({ editor }) => {
         const { selection } = editor.state;
-        if (
-          !selection.empty ||
-          selection.$from.parent.type.name !== this.name ||
-          selection.$from.parentOffset < selection.$from.parent.nodeSize - 2
-        )
-          return false;
+        if (!selection.empty) return false;
+
+        const match = findParentNode((n) => n.type.name === this.name)(selection);
+        if (!match) return false;
+
+        const { node, pos } = match;
+        const addCase = selection.$from.parentOffset >= node.nodeSize - 2;
+        let isOnlyCase = false;
+        if (!addCase) {
+          if (node.children.some((c) => !!c.attrs["value"])) return false;
+          const parent = findParentNode((n) => n.type.name === BranchNode.name)(selection);
+          if (!parent || parent.node.lastChild !== node) return false;
+          isOnlyCase = parent.node.childCount === 1;
+        }
 
         editor.commands.command(({ tr }) => {
-          tr.insert(selection.from, this.type.createAndFill()!);
-          tr.setSelection(TextSelection.create(tr.doc, selection.from + 2));
+          if (addCase) {
+            tr.insert(selection.from, this.type.createAndFill()!);
+            tr.setSelection(TextSelection.near(tr.doc.resolve(pos + node.nodeSize)));
+          } else if (isOnlyCase) {
+            tr.deleteRange(pos, pos + node.nodeSize);
+          } else {
+            tr.replaceRangeWith(pos, pos + node.nodeSize, editor.schema.nodes.paragraph.create());
+            tr.setSelection(TextSelection.near(tr.doc.resolve(pos)));
+          }
           return true;
         });
         return true;
