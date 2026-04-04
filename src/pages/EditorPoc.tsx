@@ -21,7 +21,12 @@ import {
   createEditorSlashExtension,
 } from "../lib/editorSlashCommands";
 import { cn } from "../lib/utils";
-import { BranchNode, BranchIfNode, BranchThenNode, BranchCaseNode } from "../blocks/Branch";
+import {
+  BranchActionNode,
+  BranchCaseNode,
+  BranchConditionNode,
+  BranchNode,
+} from "../blocks/Branch";
 import { ComboboxNode } from "../blocks/Combobox";
 
 type CollectFieldType = "text" | "number" | "yes/no" | "selection";
@@ -77,14 +82,14 @@ const Instruction = TiptapNode.create({
     return ReactNodeViewRenderer(() => {
       return (
         <NodeViewWrapper>
-          <div className="relative min-w-32 rounded-md bg-emerald-50 px-2 py-1.5 text-zinc-700">
+          <div className="relative min-w-32 border-s-2 border-s-emerald-400 px-2 py-1.5 text-zinc-700">
             <div
               contentEditable={false}
-              className="pointer-events-none top-1 left-2 text-xs font-medium text-emerald-700 select-none"
+              className="pointer-events-none top-1 left-2 text-xs font-medium text-emerald-500 select-none"
             >
               Instructions
             </div>
-            <NodeViewContent className="min-h-6 leading-6 outline-none" />
+            <NodeViewContent className="min-h-6 leading-6 text-emerald-900 outline-none" />
           </div>
         </NodeViewWrapper>
       );
@@ -126,7 +131,7 @@ const Collect = TiptapNode.create({
         .join("\n");
 
       return (
-        <NodeViewWrapper>
+        <NodeViewWrapper className="w-fit">
           <div className="rounded-md bg-zinc-100 px-2 py-2 text-zinc-700 ring-blue-500/20 prose-selected:ring-2">
             <div className="flex items-center gap-2">
               <span className="text-zinc-500">Collect</span>
@@ -496,7 +501,7 @@ const Step = TiptapNode.create({
                 🔀 Branch section
               </div>
             ) : null}
-            <NodeViewContent className="pl-7 *:flex *:flex-col *:items-start *:gap-2" />
+            <NodeViewContent className="pl-7 *:flex *:flex-col *:gap-2" />
           </section>
         </NodeViewWrapper>
       );
@@ -606,12 +611,6 @@ const initialContent: JsonNode = {
           type: "paragraph",
           content: [
             {
-              type: "combobox",
-              attrs: {
-                placeholder: "Set or get",
-              },
-            },
-            {
               type: "text",
               text: "I'm an advisor with Care-In-Homes following up about your request for senior care.",
             },
@@ -671,8 +670,8 @@ export default function EditorPoc() {
       Collect,
       BranchNode,
       BranchCaseNode,
-      BranchIfNode,
-      BranchThenNode,
+      BranchConditionNode,
+      BranchActionNode,
       ComboboxNode,
       Step,
       slashCommandExtension,
@@ -702,7 +701,7 @@ export default function EditorPoc() {
 
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-10 text-zinc-900 selection:bg-blue-200/40 md:px-8">
-      <div className="mx-auto flex max-w-4xl flex-col gap-8 rounded-xl bg-white py-12 pr-9 pl-2 shadow-sm ring-1 ring-zinc-200">
+      <div className="mx-auto flex max-w-2xl flex-col gap-8 rounded-xl bg-white py-12 pr-9 pl-2 shadow-sm ring-1 ring-zinc-200">
         <h1 className="pl-7 text-3xl font-semibold tracking-tight">Steps</h1>
         <EditorContent editor={editor} />
         <details className="ml-7 rounded-md bg-zinc-900 p-3 text-zinc-100">

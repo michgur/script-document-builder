@@ -326,32 +326,7 @@ export function buildEditorSlashCommandItems(createEmptyStep: () => object): Sla
             content: [
               {
                 type: "branch_case",
-                content: [
-                  {
-                    type: "branch_if",
-                    content: [
-                      {
-                        type: "combobox",
-                        attrs: {
-                          value: "",
-                          placeholder: "condition value",
-                        },
-                      },
-                    ],
-                  },
-                  {
-                    type: "branch_then",
-                    content: [
-                      {
-                        type: "combobox",
-                        attrs: {
-                          value: "",
-                          placeholder: "next action",
-                        },
-                      },
-                    ],
-                  },
-                ],
+                content: [{ type: "branch_condition" }, { type: "branch_action" }],
               },
             ],
           })

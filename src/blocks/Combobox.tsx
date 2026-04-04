@@ -1,9 +1,19 @@
 import { Node } from "@tiptap/core";
-import type { NodeViewProps } from "@tiptap/core";
+import type { Attribute, NodeViewProps } from "@tiptap/core";
 import { NodeSelection } from "@tiptap/pm/state";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
-import { useRef } from "react";
 import { cn } from "../lib/utils";
+import { Combobox as ComboboxPrimitive } from "../ui/Combobox";
+
+function nodeDataAttr(name: string, defaultValue = ""): Attribute {
+  const attr = `data-${name}`;
+  return {
+    default: defaultValue,
+    parseHTML: (el: HTMLElement) => el.getAttribute(attr),
+    renderHTML: (attrs: Record<string, unknown>) =>
+      typeof attrs[name] === "string" && attrs[name].length > 0 ? { [attr]: attrs[name] } : {},
+  };
+}
 
 export const ComboboxNode = Node.create({
   name: "combobox",
@@ -14,20 +24,9 @@ export const ComboboxNode = Node.create({
 
   addAttributes() {
     return {
-      value: {
-        parseHTML: (el: HTMLElement) => el.getAttribute("data-value"),
-        renderHTML: (attrs: { value?: unknown }) =>
-          typeof attrs.value === "string" && attrs.value.length > 0
-            ? { "data-value": attrs.value }
-            : {},
-      },
-      placeholder: {
-        parseHTML: (el: HTMLElement) => el.getAttribute("data-placeholder"),
-        renderHTML: (attrs: { placeholder?: unknown }) =>
-          typeof attrs.placeholder === "string" && attrs.placeholder.length > 0
-            ? { "data-placeholder": attrs.placeholder }
-            : {},
-      },
+      value: nodeDataAttr("value"),
+      placeholder: nodeDataAttr("placeholder"),
+      options: nodeDataAttr("options"),
       editing: {
         default: false,
         parseHTML: () => false,
@@ -47,7 +46,7 @@ export const ComboboxNode = Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(ComboboxView, {
       stopEvent: ({ event }) =>
-        event.target instanceof HTMLElement && event.target.closest("input") !== null,
+        event.target instanceof HTMLElement && event.target.closest("[role=combobox]") !== null,
     });
   },
 
@@ -74,10 +73,13 @@ export const ComboboxNode = Node.create({
 });
 
 function ComboboxView({ node, selected, editor, getPos }: NodeViewProps) {
-  const value = typeof node.attrs.value === "string" ? node.attrs.value : "";
-  const placeholder = typeof node.attrs.placeholder === "string" ? node.attrs.placeholder : "";
+  const value = String(node.attrs.value ?? "");
+  const placeholder = String(node.attrs.placeholder ?? "");
+  const options = String(node.attrs.options ?? "")
+    .split("\n")
+    .map((opt) => opt.trim())
+    .filter(Boolean);
   const editing = Boolean(node.attrs.editing);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const setEditing = (nextEditing: boolean, nextValue = value) => {
     const pos = getPos();
@@ -105,31 +107,29 @@ function ComboboxView({ node, selected, editor, getPos }: NodeViewProps) {
     <NodeViewWrapper
       contentEditable={false}
       data-placeholder={placeholder}
-      onDoubleClick={() => setEditing(true)}
+      onClick={() => editing || setEditing(true)}
       className={cn(
         "relative inline-flex select-none",
         selected && "bg-blue-200/40",
-        editing
-          ? "underline decoration-zinc-400 underline-offset-5"
-          : value
+        !editing &&
+          (value
             ? "font-medium opacity-60"
-            : "before:pointer-events-none before:text-zinc-400 before:content-[attr(data-placeholder)]",
+            : "before:pointer-events-none before:text-zinc-400 before:content-[attr(data-placeholder)]"),
+        !editing &&
+          value &&
+          !options.includes(value) &&
+          "underline decoration-red-500! decoration-wavy decoration-1 underline-offset-5",
       )}
     >
       {editing ? (
-        <input
-          autoFocus
-          ref={inputRef}
+        <ComboboxPrimitive
+          autoSelect
           defaultValue={value}
+          autoFocus
+          options={options}
           placeholder={placeholder}
-          onBlur={(event) => setEditing(false, event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === "Escape") {
-              event.preventDefault();
-              event.currentTarget.blur();
-            }
-          }}
-          className="field-sizing-content outline-none"
+          onCommit={(value) => setEditing(false, value)}
+          className="field-sizing-content underline decoration-zinc-400 underline-offset-5"
         />
       ) : (
         value || "\u200B"
