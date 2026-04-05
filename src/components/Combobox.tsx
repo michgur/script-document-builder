@@ -60,15 +60,17 @@ export function Combobox({
         {options.length > 0 ? (
           <Ariakit.ComboboxPopover
             portal={false}
-            gutter={6}
-            className={cn("z-50 max-h-56 overflow-auto rounded-md bg-white p-1", popoverClassName)}
+            className={cn(
+              "z-50 max-h-56 overflow-auto rounded-sm border border-zinc-100 bg-white",
+              popoverClassName,
+            )}
           >
             {matches.map((option) => (
               <Ariakit.ComboboxItem
                 key={option}
                 value={option}
                 focusOnHover
-                className="block w-full cursor-pointer rounded px-2 py-1 text-left text-sm text-zinc-700 data-active-item:bg-zinc-100"
+                className="block w-full cursor-pointer px-2 py-1 text-left text-sm text-zinc-700 data-active-item:bg-zinc-100"
               />
             ))}
           </Ariakit.ComboboxPopover>

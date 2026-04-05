@@ -1,10 +1,7 @@
-Stage 1: Introduction & Verification
 Agent: Hi, this is {Agent Name} calling from {Company Name}. Am I speaking to {Contact Full Name}?
 Prospect: Yes, that's me.
 Agent: Great, hi {Contact Name}.
 Agent: I am calling about your protection plan that was set up on your {Vehicle} that you purchased at {Dealership}. My system is showing that your plan is due to end on {Expiry Date}. I'm calling to see if you would like to renew your plan to make sure that you are covered for any potential repair costs that may arise in the future, have you made plans for that yet?
-
-Stage 2: Rapport Building & Car Discussion
 Agent: [Responds to user's answer]
 Agent: [Dynamic Instruction: Compliment the {Vehicle} first. Be conversational. Ask about their experience, what they enjoy about the car, or what they use it for most. Respond enthusiastically. Ask one question at a time.]
 Prospect: [Responds]

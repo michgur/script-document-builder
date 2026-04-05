@@ -102,7 +102,6 @@ export const BranchCaseNode = Node.create({
             className={cn(
               "inline-flex items-center gap-1 px-1",
               "[&>[data-node-view-wrapper]>:nth-child(2)]:before:content-[':']",
-              "[&>[data-node-view-wrapper]>:nth-child(2)]:before:ms-0.5",
               "[&>[data-node-view-wrapper]>:nth-child(2)]:before:me-1",
             )}
           />
