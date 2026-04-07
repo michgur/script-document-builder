@@ -1,6 +1,6 @@
-import { defineConfig } from "vite-plus";
-import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   staged: {
@@ -12,6 +12,7 @@ export default defineConfig({
   },
   fmt: {
     ignorePatterns: ["scripts-mds/**", "dist/**"],
+    sortImports: {},
     sortTailwindcss: {
       stylesheet: "./src/index.css",
       functions: ["clsx", "cn"],

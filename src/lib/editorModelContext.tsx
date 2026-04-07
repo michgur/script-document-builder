@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+
 import { replaceComboboxOptions } from "./comboboxOptionsStore";
 
 export type EditorModelStep = {

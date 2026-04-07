@@ -1,12 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import EditorPoc from "./pages/EditorPoc";
+
+import EditorPoc2 from "./pages/EditorPoc2";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/editor" replace />} />
-        <Route path="/editor" element={<EditorPoc />} />
+        <Route path="/editor" element={<EditorPoc2 />} />
       </Routes>
     </BrowserRouter>
   );

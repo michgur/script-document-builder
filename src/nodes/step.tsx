@@ -1,7 +1,8 @@
 import * as Ariakit from "@ariakit/react";
-import { mergeAttributes, Node as TiptapNode } from "@tiptap/core";
+import { mergeAttributes, Node } from "@tiptap/core";
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
-import { Copy, GripVertical, Plus, Trash2 } from "lucide-react";
+import { CopyIcon, GripVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
+
 import { cn } from "../lib/utils";
 
 type StepHandleMenuProps = {
@@ -19,11 +20,7 @@ function StepHandleMenu({
 }: StepHandleMenuProps) {
   const menu = Ariakit.useMenuStore();
   return (
-    <div
-      contentEditable={false}
-      suppressContentEditableWarning
-      className="absolute top-1 left-0 z-20 select-none"
-    >
+    <div contentEditable={false} suppressContentEditableWarning className="z-20 select-none">
       <Ariakit.MenuButton
         store={menu}
         render={<button type="button" />}
@@ -35,7 +32,7 @@ function StepHandleMenu({
         )}
         aria-label="Step actions"
       >
-        <GripVertical size={14} />
+        <GripVerticalIcon size={14} />
       </Ariakit.MenuButton>
 
       <Ariakit.Menu
@@ -48,7 +45,7 @@ function StepHandleMenu({
           className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-zinc-700 outline-none data-active-item:bg-zinc-100"
           onMouseDown={onInsertAbove}
         >
-          <Plus size={14} />
+          <PlusIcon size={14} />
           Insert step above
         </Ariakit.MenuItem>
         <Ariakit.MenuItem
@@ -56,7 +53,7 @@ function StepHandleMenu({
           className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-zinc-700 outline-none data-active-item:bg-zinc-100"
           onMouseDown={onInsertBelow}
         >
-          <Plus size={14} />
+          <PlusIcon size={14} />
           Insert step below
         </Ariakit.MenuItem>
         <Ariakit.MenuItem
@@ -64,7 +61,7 @@ function StepHandleMenu({
           className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-zinc-700 outline-none data-active-item:bg-zinc-100"
           onMouseDown={onDuplicate}
         >
-          <Copy size={14} />
+          <CopyIcon size={14} />
           Duplicate step
         </Ariakit.MenuItem>
         <Ariakit.MenuItem
@@ -72,7 +69,7 @@ function StepHandleMenu({
           className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-rose-600 outline-none data-active-item:bg-rose-50"
           onMouseDown={onDelete}
         >
-          <Trash2 size={14} />
+          <Trash2Icon size={14} />
           Delete step
         </Ariakit.MenuItem>
       </Ariakit.Menu>
@@ -87,13 +84,13 @@ export function createEmptyStep() {
   };
 }
 
-export const StepNode = TiptapNode.create({
+export const StepNode = Node.create({
   name: "step",
   group: "block",
-  content: "stepTitle (paragraph|instruction|collect|branch)*",
-  draggable: true,
+  content: "step_title say? instruction? collect* branch? composer",
   isolating: true,
   defining: true,
+  draggable: true,
 
   parseHTML() {
     return [{ tag: 'section[data-node-type="step"]' }];
@@ -101,55 +98,6 @@ export const StepNode = TiptapNode.create({
 
   renderHTML({ HTMLAttributes }) {
     return ["section", mergeAttributes(HTMLAttributes, { "data-node-type": "step" }), 0];
-  },
-
-  addKeyboardShortcuts() {
-    const deleteIfBlankStep = () => {
-      const { selection } = this.editor.state;
-      if (!selection.empty) {
-        return false;
-      }
-
-      const { $from } = selection;
-      const title = $from.parent;
-      if (title.type.name !== "stepTitle" || title.textContent.length > 0) {
-        return false;
-      }
-
-      const stepNode = $from.node(1);
-      if (stepNode.type.name !== "step" || stepNode.childCount > 1) {
-        return false;
-      }
-
-      const from = $from.before(1);
-      return this.editor.commands.deleteRange({
-        from,
-        to: from + stepNode.nodeSize,
-      });
-    };
-
-    return {
-      Backspace: deleteIfBlankStep,
-      Enter: () => {
-        const { selection } = this.editor.state;
-        if (!selection.empty) return false;
-        const { $from } = selection;
-        switch ($from.parent.type.name) {
-          case "instruction":
-            return this.editor.commands.insertContent("<br>");
-          case "stepTitle":
-            if ($from.parentOffset > 0) return false;
-            {
-              const step = $from.before(1);
-              return this.editor.commands.insertContentAt(step, createEmptyStep(), {
-                updateSelection: false,
-              });
-            }
-          default:
-            return false;
-        }
-      },
-    };
   },
 
   addNodeView() {
@@ -160,7 +108,7 @@ export const StepNode = TiptapNode.create({
       };
 
       return (
-        <NodeViewWrapper className="group relative rounded-md p-1">
+        <NodeViewWrapper className="group flex gap-1">
           <StepHandleMenu
             onInsertAbove={() => {
               runAtStepPosition((position) => {
@@ -188,7 +136,7 @@ export const StepNode = TiptapNode.create({
               });
             }}
           />
-          <NodeViewContent className="pl-7 *:flex *:flex-col *:gap-2" />
+          <NodeViewContent className="*:flex *:flex-col" />
         </NodeViewWrapper>
       );
     });

@@ -2,9 +2,10 @@ import { Node } from "@tiptap/core";
 import type { Attribute, NodeViewProps } from "@tiptap/core";
 import { NodeSelection } from "@tiptap/pm/state";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+
+import { Combobox as ComboboxPrimitive } from "../components/Combobox";
 import { useComboboxOptions } from "../lib/comboboxOptionsStore";
 import { cn } from "../lib/utils";
-import { Combobox as ComboboxPrimitive } from "../components/Combobox";
 
 function nodeDataAttr(name: string, defaultValue = ""): Attribute {
   const attr = `data-${name}`;

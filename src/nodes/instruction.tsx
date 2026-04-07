@@ -1,10 +1,12 @@
 import { mergeAttributes, Node as TiptapNode } from "@tiptap/core";
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 
+import { whenSelected } from "../lib/editor-utils";
+
 export const InstructionNode = TiptapNode.create({
   name: "instruction",
   group: "block",
-  content: "inline*",
+  content: "(text|hardBreak)*",
 
   parseHTML() {
     return [{ tag: 'div[data-node-type="instruction"]' }];
@@ -28,5 +30,18 @@ export const InstructionNode = TiptapNode.create({
         </NodeViewWrapper>
       );
     });
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: whenSelected(
+        this.name,
+        ({ editor }) => {
+          editor.commands.insertContent("\n");
+          return true;
+        },
+        { allowNonempty: true },
+      ),
+    };
   },
 });

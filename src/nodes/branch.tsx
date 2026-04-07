@@ -1,8 +1,9 @@
 import { findParentNode, mergeAttributes, Node } from "@tiptap/core";
-import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
-import { cn } from "../lib/utils";
-import { ComboboxNode } from "./Combobox";
 import { TextSelection } from "@tiptap/pm/state";
+import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+
+import { cn } from "../lib/utils";
+import { ComboboxNode } from "./combobox";
 
 export const BranchConditionNode = ComboboxNode.extend({
   name: "branch_condition",
@@ -59,9 +60,7 @@ export const BranchNode = Node.create({
       if (deletions.length === 0) return false;
 
       deletions.sort((a, b) => b - a);
-      deletions.forEach((d) =>
-        tr.replaceRangeWith(d, d + 1, state.schema.nodes.paragraph.create()),
-      );
+      deletions.forEach((d) => tr.deleteRange(d, d + 1));
       tr.setSelection(TextSelection.create(tr.doc, deletions[deletions.length - 1] + 1));
       return true;
     });
