@@ -19,7 +19,7 @@ export const InstructionNode = TiptapNode.create({
   addNodeView() {
     return ReactNodeViewRenderer(() => {
       return (
-        <NodeViewWrapper className="min-w-32">
+        <NodeViewWrapper className="my-2 min-w-32">
           <span
             contentEditable={false}
             className="pointer-events-none top-1 left-2 flex items-center gap-1 py-1 text-xs font-medium text-emerald-500 select-none"

@@ -15,7 +15,7 @@ import {
   type ComposerSuggestionsProps,
   type ComposerSuggestionsRef,
 } from "../components/ComposerSuggestions";
-import { CollectNode } from "../nodes/collect";
+import { createFieldCaseNode, FieldsNode } from "../nodes/fields";
 import { InstructionNode } from "../nodes/instruction";
 import { StepNode } from "../nodes/step";
 import { TransitionCaseNode, TransitionNode } from "../nodes/transitions";
@@ -81,11 +81,15 @@ const COMPOSER_SUGGESTIONS: ComposerSuggestionItem[] = [
     isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== "instruction"),
   },
   {
-    title: "Collect a value",
-    description: "Agent will repeat this step until colleting this value",
-    aliases: ["collect", "value"],
+    title: "Fields",
+    description: "Define values to collect from this step",
+    aliases: ["fields", "collect", "value"],
     icon: ClipboardPenIcon,
-    run: addToStep(CollectNode.name),
+    run: addToStep(FieldsNode.name, ({ editor }) => {
+      const fields = getNodeType(FieldsNode.name, editor.schema);
+      return fields.createAndFill(undefined, createFieldCaseNode(editor.schema));
+    }),
+    isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== "fields"),
   },
   {
     title: "Transitions",

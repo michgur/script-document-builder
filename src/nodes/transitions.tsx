@@ -116,11 +116,29 @@ export const TransitionNode = Node.create({
   onUpdate: whenSelected("transition", ({ editor, node }) => {
     if (node.childCount === 0) editor.commands.deleteNode("transition");
   }),
+
+  addNodeView() {
+    return ReactNodeViewRenderer(Transitions);
+  },
 });
+
+function Transitions() {
+  return (
+    <NodeViewWrapper className="my-4 min-w-40">
+      <div
+        contentEditable={false}
+        className="py-1 text-xs font-medium tracking-wide text-zinc-500 uppercase"
+      >
+        Transitions
+      </div>
+      <NodeViewContent className="min-h-6 leading-6 outline-none" />
+    </NodeViewWrapper>
+  );
+}
 
 function TransitionSentence({ node }: ReactNodeViewProps) {
   return (
-    <NodeViewWrapper className="flex items-center">
+    <NodeViewWrapper className="flex items-start">
       <strong className="font-medium" contentEditable={false}>
         {node.attrs["prefix"]}&nbsp;
       </strong>

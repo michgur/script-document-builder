@@ -5,12 +5,21 @@ import HardBreak from "@tiptap/extension-hard-break";
 import History from "@tiptap/extension-history";
 import Text from "@tiptap/extension-text";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
+import { useEffect } from "react";
 
 import { Placeholder } from "./lib/placeholder";
 import { BranchActionNode, BranchCaseNode, BranchConditionNode, BranchNode } from "./nodes/branch";
-import { CollectNode } from "./nodes/collect";
 import { ComboboxNode } from "./nodes/combobox";
 import { ComposerNode } from "./nodes/composer";
+import {
+  FieldCaseNode,
+  FieldDescriptionNode,
+  FieldEnumNode,
+  FieldNameNode,
+  FieldsNode,
+  FieldSentenceNode,
+  FieldTypeNode,
+} from "./nodes/fields";
 import { InstructionNode } from "./nodes/instruction";
 import { SayNode } from "./nodes/say";
 import { StepNode } from "./nodes/step";
@@ -51,7 +60,13 @@ const initialContent: JSONContent = {
   ],
 };
 
-export default function Editor({ onChange }: { onChange?: (value: JSONContent) => void }) {
+export default function Editor({
+  onChange,
+  externalContent,
+}: {
+  onChange?: (value: JSONContent) => void;
+  externalContent?: JSONContent;
+}) {
   const editor = useEditor({
     extensions: [
       StepDocumentNode,
@@ -68,6 +83,13 @@ export default function Editor({ onChange }: { onChange?: (value: JSONContent) =
       BranchConditionNode,
       BranchCaseNode,
       BranchNode,
+      FieldsNode,
+      FieldCaseNode,
+      FieldNameNode,
+      FieldTypeNode,
+      FieldEnumNode,
+      FieldDescriptionNode,
+      FieldSentenceNode,
       TransitionNode,
       TransitionCaseNode,
       TransitionTargetNode,
@@ -75,7 +97,6 @@ export default function Editor({ onChange }: { onChange?: (value: JSONContent) =
       TransitionDescriptionNode,
       TransitionSayNode,
       TransitionSentenceNode,
-      CollectNode,
       Focus.configure({ className: "tt-focus" }),
       Dropcursor.configure({
         class: "h-1! rounded-full bg-blue-500/20!",
@@ -96,6 +117,9 @@ export default function Editor({ onChange }: { onChange?: (value: JSONContent) =
               [TransitionConditionNode.name]: "Condition...",
               [TransitionDescriptionNode.name]: "AI Condition...",
               [TransitionTargetNode.name]: "Target step...",
+              [FieldNameNode.name]: "Field name...",
+              [FieldEnumNode.name]: "value_a, value_b",
+              [FieldDescriptionNode.name]: "Field description...",
             }[node.type.name] ?? ""
           );
         },
@@ -118,6 +142,11 @@ export default function Editor({ onChange }: { onChange?: (value: JSONContent) =
       },
     }),
   });
+
+  useEffect(() => {
+    if (!editor || externalContent?.type !== "doc") return;
+    editor.commands.setContent(externalContent);
+  }, [editor, externalContent]);
 
   return <EditorContent editor={editor} />;
 }

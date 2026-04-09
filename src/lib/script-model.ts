@@ -57,23 +57,34 @@ function inlineContent(text: string): JSONContent[] {
     ]);
 }
 
-function collectAttrsFromField(field: Field): { fieldType: string; options: string } {
-  if (field.enum && field.enum.length > 0) {
-    return {
-      fieldType: "selection",
-      options: field.enum.join("\n"),
-    };
-  }
+const FIELD_TYPE_OPTIONS_ATTR = "string\nnumber\nboolean";
 
-  if (field.type === "number") {
-    return { fieldType: "number", options: "" };
-  }
+function parseFieldType(rawType: unknown): Field["type"] {
+  return rawType === "number" || rawType === "boolean" || rawType === "string" ? rawType : "string";
+}
 
-  if (field.type === "boolean") {
-    return { fieldType: "yes/no", options: "" };
-  }
-
-  return { fieldType: "text", options: "" };
+function parseLegacyCollectFields(stepName: string, nodes: JSONContent[]): Field[] {
+  return nodes
+    .filter((n) => n.type === "collect")
+    .map((n, idx) => {
+      const rawType = n.attrs?.fieldType;
+      const field: Field = {
+        name: `${stepName}_field_${idx + 1}`,
+        type: rawType === "number" ? "number" : rawType === "yes/no" ? "boolean" : "string",
+      };
+      if (rawType === "selection") {
+        const rawOptions = n.attrs?.options;
+        const options = typeof rawOptions === "string" ? rawOptions : "";
+        const parsedOptions = options
+          .split("\n")
+          .map((option) => option.trim())
+          .filter(Boolean);
+        if (parsedOptions.length > 0) {
+          field.enum = parsedOptions;
+        }
+      }
+      return field;
+    });
 }
 
 export function compileToEditorJson(script: Script): JSONContent {
@@ -100,12 +111,50 @@ export function compileToEditorJson(script: Script): JSONContent {
     }
 
     if (step.fields && step.fields.length > 0) {
-      content.push(
-        ...step.fields.map<JSONContent>((field) => ({
-          type: "collect",
-          attrs: collectAttrsFromField(field),
-        })),
-      );
+      content.push({
+        type: "fields",
+        content: step.fields.map<JSONContent>((field) => {
+          const fieldCaseContent: JSONContent[] = [
+            {
+              type: "field_name",
+              content:
+                field.name.trim().length > 0 ? [{ type: "text", text: field.name.trim() }] : [],
+            },
+            {
+              type: "field_type",
+              content: [
+                {
+                  type: "combobox",
+                  attrs: {
+                    value: field.type,
+                    placeholder: "type",
+                    options: FIELD_TYPE_OPTIONS_ATTR,
+                  },
+                },
+              ],
+            },
+          ];
+
+          if (field.enum && field.enum.length > 0) {
+            fieldCaseContent.push({
+              type: "field_enum",
+              content: [{ type: "text", text: field.enum.join(", ") }],
+            });
+          }
+
+          if (field.description && field.description.trim().length > 0) {
+            fieldCaseContent.push({
+              type: "field_description",
+              content: [{ type: "text", text: field.description.trim() }],
+            });
+          }
+
+          return {
+            type: "field_case",
+            content: fieldCaseContent,
+          };
+        }),
+      });
     }
 
     if (step.transitions && step.transitions.length > 0) {
@@ -187,27 +236,41 @@ export function compileFromEditorJson(doc: JSONContent): Script {
         const say = (sayNode && paragraphContent(sayNode)) ?? undefined;
         const instructionNode = content.find((n) => n.type === "instruction");
         const instruction = (instructionNode && paragraphContent(instructionNode)) ?? undefined;
-        const fields = content
-          .filter((n) => n.type === "collect")
-          .map((n, idx) => {
-            const rawType = n.attrs?.fieldType;
-            const field: Field = {
-              name: name + idx,
-              type: rawType === "number" ? "number" : rawType === "yes/no" ? "boolean" : "string",
-            };
-            if (rawType === "selection") {
-              const rawOptions = n.attrs?.options;
-              const options = typeof rawOptions === "string" ? rawOptions : "";
-              const parsedOptions = options
-                .split("\n")
-                .map((option) => option.trim())
+        const fieldsNode = content.find((n) => n.type === "fields");
+        const fields =
+          fieldsNode?.content
+            ?.filter((fieldNode) => fieldNode.type === "field_case")
+            .map<Field>((fieldNode, idx) => {
+              const parts = fieldNode.content ?? [];
+              const fieldName = textContent(parts.find((p) => p.type === "field_name"));
+              const typeNode = parts.find((p) => p.type === "field_type");
+              const comboboxType = typeNode?.content?.find((n) => n.type === "combobox")?.attrs
+                ?.value;
+              const rawType =
+                typeof comboboxType === "string"
+                  ? comboboxType.trim()
+                  : (textContent(typeNode)?.trim() ?? "");
+              const enumText = textContent(parts.find((p) => p.type === "field_enum")) ?? "";
+              const enumValues = enumText
+                .split(",")
+                .map((value) => value.trim())
                 .filter(Boolean);
-              if (parsedOptions.length > 0) {
-                field.enum = parsedOptions;
-              }
-            }
-            return field;
-          });
+              const description =
+                textContent(parts.find((p) => p.type === "field_description")) ?? undefined;
+
+              return {
+                name:
+                  (fieldName && fieldName.trim().length > 0 ? fieldName.trim() : undefined) ??
+                  `${name}_field_${idx + 1}`,
+                type: parseFieldType(rawType),
+                ...(enumValues.length > 0 && { enum: enumValues }),
+                ...(description &&
+                  description.trim().length > 0 && {
+                    description: description.trim(),
+                  }),
+              };
+            }) ?? parseLegacyCollectFields(name, content);
+
         const transitionsNode = content.find((n) => n.type === "transition");
         const transitions =
           transitionsNode?.content
