@@ -9,8 +9,8 @@ export default function EditorPoc2() {
   const deferredContent = useDeferredValue(content);
 
   return (
-    <div className="size-full bg-zinc-50 px-4 py-10 text-zinc-900 selection:bg-blue-200/40">
-      <div className="mx-auto me-8 h-full max-w-2xl rounded-xl bg-white px-2 py-12 shadow-sm ring-1 ring-zinc-200">
+    <div className="size-full bg-zinc-50 px-4 py-10 text-zinc-900 selection:bg-selection">
+      <div className="mx-auto me-8 h-full max-w-2xl rounded-xl bg-white py-12 ps-2 pe-9 shadow-sm ring-1 ring-zinc-200">
         <h1 className="ms-8 text-3xl font-semibold tracking-tight">Steps</h1>
         <Editor onChange={setContent} />
         <details className="ml-7 rounded-md bg-zinc-900 p-3 text-zinc-100">

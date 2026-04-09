@@ -27,6 +27,9 @@ importers:
       '@tiptap/extension-dropcursor':
         specifier: ^3.21.0
         version: 3.21.0(@tiptap/extensions@3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.22.1))(@tiptap/pm@3.22.1))
+      '@tiptap/extension-focus':
+        specifier: ^3.22.2
+        version: 3.22.2(@tiptap/extensions@3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.22.1))(@tiptap/pm@3.22.1))
       '@tiptap/extension-gapcursor':
         specifier: ^3.21.0
         version: 3.21.0(@tiptap/extensions@3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.22.1))(@tiptap/pm@3.22.1))
@@ -722,6 +725,11 @@ packages:
       '@floating-ui/dom': ^1.0.0
       '@tiptap/core': ^3.21.0
       '@tiptap/pm': ^3.21.0
+
+  '@tiptap/extension-focus@3.22.2':
+    resolution: {integrity: sha512-7QWHCyIt4CNqvPqmpaOaMFgg4yGbby9wdbzELJ1oHM3dL4Jv8hOQlSrSfz6aeH3ykU0k6jyOQjy9SP6GYyi5Zw==}
+    peerDependencies:
+      '@tiptap/extensions': ^3.22.2
 
   '@tiptap/extension-gapcursor@3.21.0':
     resolution: {integrity: sha512-wGjgAoYBTvPAe9QYMI5px355XcNeMkaUrMY9IHbMqgqdmHcDxqooxM4H6sYVX2CRcHwXy4I8NQAoOhSYrQJDMg==}
@@ -2302,6 +2310,10 @@ snapshots:
       '@tiptap/core': 3.21.0(@tiptap/pm@3.22.1)
       '@tiptap/pm': 3.22.1
     optional: true
+
+  '@tiptap/extension-focus@3.22.2(@tiptap/extensions@3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.22.1))(@tiptap/pm@3.22.1))':
+    dependencies:
+      '@tiptap/extensions': 3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.22.1))(@tiptap/pm@3.22.1)
 
   '@tiptap/extension-gapcursor@3.21.0(@tiptap/extensions@3.21.0(@tiptap/core@3.21.0(@tiptap/pm@3.22.1))(@tiptap/pm@3.22.1))':
     dependencies:

@@ -38,7 +38,7 @@ export const CollectNode = TiptapNode.create({
 
       return (
         <NodeViewWrapper className="w-fit">
-          <div className="rounded-md bg-zinc-100 px-2 py-2 text-zinc-700 ring-blue-500/20 prose-selected:ring-2">
+          <div className="rounded-md bg-zinc-100 px-2 py-2 text-zinc-700 ring-blue-500/20 tt-selected:ring-2">
             <div className="flex items-center gap-2">
               <span className="text-zinc-500">Collect</span>
               <select

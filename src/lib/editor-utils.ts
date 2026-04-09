@@ -1,5 +1,5 @@
-import { Editor, findParentNode, type KeyboardShortcutCommand } from "@tiptap/core";
-import type { Node, ResolvedPos } from "@tiptap/pm/model";
+import { Editor, findParentNode, type Attribute, type KeyboardShortcutCommand } from "@tiptap/core";
+import type { Node, NodeType, ResolvedPos } from "@tiptap/pm/model";
 import type { Selection } from "@tiptap/pm/state";
 
 type StepContext = {
@@ -10,7 +10,7 @@ type StepContext = {
 
 export function whenSelected(
   type: string,
-  handler: (props: { editor: Editor; node: Node; pos: number }) => boolean,
+  handler: (props: { editor: Editor; node: Node; pos: number }) => boolean | void,
   options?: {
     allowNonempty?: boolean;
   },
@@ -23,7 +23,7 @@ export function whenSelected(
     if (!match) return false;
 
     const { node, pos } = match;
-    return handler({ editor, node, pos });
+    return handler({ editor, node, pos }) ?? false;
   };
 }
 
@@ -80,4 +80,23 @@ export function stepHasCustomNodes(stepNode: Node): boolean {
   }
 
   return false;
+}
+
+export function nodeDataAttr(name: string, defaultValue = ""): Attribute {
+  const attr = `data-${name}`;
+  return {
+    default: defaultValue,
+    parseHTML: (el: HTMLElement) => el.getAttribute(attr),
+    renderHTML: (attrs: Record<string, unknown>) =>
+      typeof attrs[name] === "string" && attrs[name].length > 0 ? { [attr]: attrs[name] } : {},
+  };
+}
+
+export function findInsertionPosition(parentPos: ResolvedPos, nodeType: NodeType) {
+  for (let i = parentPos.parent.childCount; i >= 0; i--) {
+    if (parentPos.parent.canReplaceWith(i, i, nodeType)) {
+      return parentPos.posAtIndex(i);
+    }
+  }
+  return null;
 }

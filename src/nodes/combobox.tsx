@@ -1,21 +1,12 @@
 import { Node } from "@tiptap/core";
-import type { Attribute, NodeViewProps } from "@tiptap/core";
+import type { NodeViewProps } from "@tiptap/core";
 import { NodeSelection } from "@tiptap/pm/state";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 
 import { Combobox as ComboboxPrimitive } from "../components/Combobox";
 import { useComboboxOptions } from "../lib/comboboxOptionsStore";
+import { nodeDataAttr } from "../lib/editor-utils";
 import { cn } from "../lib/utils";
-
-function nodeDataAttr(name: string, defaultValue = ""): Attribute {
-  const attr = `data-${name}`;
-  return {
-    default: defaultValue,
-    parseHTML: (el: HTMLElement) => el.getAttribute(attr),
-    renderHTML: (attrs: Record<string, unknown>) =>
-      typeof attrs[name] === "string" && attrs[name].length > 0 ? { [attr]: attrs[name] } : {},
-  };
-}
 
 export const ComboboxNode = Node.create({
   name: "combobox",

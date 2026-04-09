@@ -9,15 +9,15 @@ type Field = {
   enum: string[]; // for string fields, enumeration of allowed values
   description?: string; // free text describing the field's value
 };
-// a branch from a step to a sequence of child steps
-type Branch = (
-  | { description: string; condition?: never } // free text description, LLM will read it and decide when to pick this branch
-  | { condition: ConditionDSL; description?: never } // DSL query, the system will pick this branch based on hard logic
+// a non-sequential transition from a step
+type Transition = (
+  | { description: string } // free text description, LLM will read it and decide when to pick this branch
+  | { condition: ConditionDSL } // DSL query, the system will pick this branch based on hard logic
 ) & {
   say?: string;
-  steps: Step[]; // child steps sequence to perform when branch is selected
+  target: string; // go to this step
 };
-type Step = {
+export type Step = {
   name: string; // step unique identifier that's also human readable
   condition?: ConditionDSL; // only perform the step when this evaluates to true
   say?: string; // a message for the agent to say verbatim. if "instruction" is not present, agent will repeat this (in varying phrasings) until the step is done
@@ -31,7 +31,7 @@ type Step = {
     output: any;
   };
   outcome?: CallOutcome; // set the call outcome when this step is done
-  branches?: Record<string, Branch>; // when the step is done, it will pick up to one of these branches. the picked branch's steps will be executed in order. when the sequence is over, the step after this one gets active.
+  transitions?: Transition[]; // when the step is done, it will pick up to one of these branches. the picked branch's steps will be executed in order. when the sequence is over, the step after this one gets active.
   experimental?: Record<string, any>; // used for experimental features
 };
 

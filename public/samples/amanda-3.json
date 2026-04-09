@@ -1,0 +1,260 @@
+[
+  {
+    "name": "intro",
+    "say": "I saw you reached out regarding {description/improving your workflows} — how are you doing today?",
+    "instruction": "If the user is hesitant, explain: I just want to make sure I connect you with the right consultant for your specific situation."
+  },
+  {
+    "name": "main need",
+    "say": "The goal for today is just to clarify a few details so I can connect you to the right product consultant. By the way, this call is recorded. Just to start — in your own words, what was the main trigger that brought you to monday?",
+    "instruction": "Continue inquiring about the main reason the user contacted monday. Identify the product type and whether they are an Explorer or Sprinter. Ask follow-up questions to clarify. If the user is hesitant: \"I just want to make sure I connect you with the right consultant for your specific situation.\"",
+    "fields": [
+      {
+        "name": "main_need",
+        "type": "string",
+        "enum": [],
+        "description": "Brief summary of the main business objective the user wants to solve with monday.com. If the user is explicitly asking about support, billing, or troubleshooting (not a new product need), return 'non-qualification request'."
+      },
+      {
+        "name": "product_type",
+        "type": "string",
+        "enum": ["CRM", "Dev", "Service", "Work Mgmt"],
+        "description": "Choose based on explicit user information. Do not guess."
+      },
+      {
+        "name": "prospect_type",
+        "type": "string",
+        "enum": ["Explorer", "Sprinter"],
+        "description": "Explorer = vague/high-level/just browsing. Sprinter = specific/urgent/clear use-case."
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "main_need = non-qualification request",
+        "target": "soft letdown"
+      }
+    ]
+  },
+  {
+    "name": "workflow pain point",
+    "instruction": "Ask about the specific workflow challenge or pain point.\n\nPhrasing by prospect type:\n- Explorer: \"What's the specific breaking point in your current process that you're hoping to address with monday?\"\n- Sprinter: \"Strictly regarding your role — are you setting this up for your own team or the whole company?\"\n- Default: \"What's the main workflow challenge you're looking to solve with monday?\"\n\nIf the user is hesitant: \"I just want to make sure I connect you with the right consultant for your specific situation.\"",
+    "fields": [
+      {
+        "name": "workflow_pain_point",
+        "type": "string",
+        "enum": [],
+        "description": "A workflow pain point, specific process problem, or product interest related to monday.com. If the user is asking about support, billing, or troubleshooting (not a new product need), return 'non-qualification request'."
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "workflow_pain_point = non-qualification request",
+        "target": "soft letdown"
+      }
+    ]
+  },
+  {
+    "name": "current tools",
+    "instruction": "Ask what tools or software they currently use.\n\nPhrasing by prospect type:\n- Explorer: \"What are you using today to run this process?\"\n- Sprinter: \"Quick check — are you moving off of any software right now?\"\n- Default: \"What tools are you currently using for this?\"\n\nIf the user declines: \"No worries, I just want to make sure the consultant has the right context.\"",
+    "fields": [
+      {
+        "name": "current_tools",
+        "type": "string",
+        "enum": [],
+        "description": "The software, tools, or platforms the user is currently using to manage their workflows. If none mentioned, return 'none'."
+      }
+    ],
+    "optional": true
+  },
+  {
+    "name": "user count",
+    "instruction": "Ask how many people would use monday day to day. If the user gives a range or vague answer (e.g. 'around 20', 'between 10 and 30'), ask them to pin down a single number: \"What number should I use — {user_count} or a bit higher?\" If they refuse: \"I just need one number to make sure I route you correctly.\"",
+    "fields": [
+      {
+        "name": "user_count",
+        "type": "number",
+        "enum": [],
+        "description": "The number of people who would use monday day to day. Must be a single number, not a range."
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "user_count < {number_of_users_to_qualify}",
+        "target": "expansion path"
+      },
+      {
+        "condition": "user_count >= {number_of_users_to_qualify}",
+        "say": "Got it — thanks. I'm going to ask a couple quick questions to make sure I connect you with the right product consultant.",
+        "target": "has offshore employees"
+      }
+    ]
+  },
+  {
+    "name": "expansion path",
+    "instruction": "Ask whether this team works independently or collaborates with other departments.\n\nPhrasing options:\n- \"Regarding the workflow — is this group working independently, or do they need to collaborate with other departments?\"\n- \"Would this team be working in a silo, or are other departments involved?\"",
+    "fields": [
+      {
+        "name": "workflow_collaboration_scope",
+        "type": "string",
+        "enum": ["independent", "cross-department"],
+        "description": "Whether the user's team works independently or needs to collaborate with other departments."
+      }
+    ]
+  },
+  {
+    "name": "expansion planned",
+    "instruction": "Ask whether they plan to expand monday to other teams.\n\nPhrasing by collaboration scope:\n- cross-department: \"Does that mean you're planning to onboard those other teams to monday as well?\"\n- independent: \"So it would likely stay just within your team for now?\"\n- Default: \"Are you expecting the rollout to expand beyond this initial group?\"",
+    "fields": [
+      {
+        "name": "expansion_planned",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "expansion_planned = false",
+        "target": "qualification routing"
+      }
+    ]
+  },
+  {
+    "name": "expansion timeline",
+    "instruction": "Ask about the timeline for expansion.\n\nPhrasing options:\n- \"Is that rollout something planned for the next 3 months, or is that further down the road?\"\n- \"What's the timeline on that expansion — near-term or longer out?\"\n\nIf they push back: \"This information is needed for us to send you the most suitable information.\"",
+    "fields": [
+      {
+        "name": "expansion_timeline",
+        "type": "string",
+        "enum": [],
+        "description": "Today is {%today_iso%}. The approximate date the user plans expansion for in YYYY-MM-DD format. If timeline is immediate or as-soon-as-possible use today's date. If the user did not specify a timeline return 'not specified'."
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "expansion_timeline $date_valid and expansion_timeline $date_diff_lte 93",
+        "target": "total user count"
+      },
+      {
+        "description": "Expansion is not within 3 months or no valid date",
+        "target": "qualification routing"
+      }
+    ]
+  },
+  {
+    "name": "total user count",
+    "instruction": "Ask for the total user count including the expansion group.\n\nPhrasing options:\n- \"So including that next wave, what is the total user count we should plan for?\"\n- \"And what's the combined headcount once that expansion happens?\"\n\nIf they decline: \"Just a rough total is fine — I want to make sure I route you to the right team.\"",
+    "fields": [
+      {
+        "name": "total_user_count",
+        "type": "number",
+        "enum": [],
+        "description": "Total number of users including the expansion group."
+      }
+    ]
+  },
+  {
+    "name": "qualification routing",
+    "instruction": "Make the routing decision silently. Do NOT mention thresholds or rules to the user.\n\nInternal math:\n- TotalQualifiedUsers = user_count + total_user_count (only if expansion is within 3 months)\n- QUALIFIED if TotalQualifiedUsers >= {number_of_users_to_qualify} AND a workflow pain point was identified\n- UNQUALIFIED otherwise\n\nIf QUALIFIED: say a brief acknowledgment and move to enrichment.\nIf UNQUALIFIED: move to soft letdown immediately without additional questions.",
+    "fields": [
+      {
+        "name": "qualification_result",
+        "type": "string",
+        "enum": ["qualified", "unqualified"],
+        "description": "Based on TotalQualifiedUsers >= {number_of_users_to_qualify} AND workflow_pain_point is not 'non-qualification request'."
+      },
+      {
+        "name": "handoff_notes",
+        "type": "string",
+        "enum": [],
+        "description": "3-6 bullet points: need summary, current tools, user count (current + expansion), company size if provided, role/team if mentioned."
+      },
+      {
+        "name": "disqualification_reason",
+        "type": "string",
+        "enum": [
+          "insufficient_user_count",
+          "no_clear_need",
+          "refused_to_answer",
+          "support_request",
+          "billing_request",
+          "other"
+        ],
+        "description": "Primary reason for disqualification. Only required if unqualified."
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "qualification_result = qualified",
+        "say": "Got it — thanks. I'm going to ask a couple quick questions to make sure I connect you with the right product consultant.",
+        "target": "has offshore employees"
+      },
+      {
+        "condition": "qualification_result = unqualified",
+        "target": "soft letdown"
+      }
+    ]
+  },
+  {
+    "name": "has offshore employees",
+    "instruction": "Ask whether they use offshore employees.\n\nPhrasing options:\n- \"So you mentioned {workflow_pain_point/\"your workflow needs\"} — are you also using offshore employees?\"\n- \"And do you utilize any offshore workforce?\"",
+    "fields": [
+      {
+        "name": "has_offshore_employees",
+        "type": "boolean",
+        "enum": []
+      }
+    ]
+  },
+  {
+    "name": "industry",
+    "instruction": "Ask what industry they're in.\n\nPhrasing options:\n- \"What industry are you in?\"\n- \"What sector does your company operate in?\"\n\nIf they decline: \"Just a general sense is fine — tech, finance, healthcare, that kind of thing.\"",
+    "fields": [
+      {
+        "name": "industry",
+        "type": "string",
+        "enum": [],
+        "description": "The industry or sector the user's company operates in."
+      }
+    ],
+    "optional": true
+  },
+  {
+    "name": "is public company",
+    "instruction": "Ask whether they're public or private.\n\nPhrasing options:\n- \"Are you guys public or private?\"\n- \"Is your company publicly traded?\"\n\nIf they decline: \"It's just helpful context for the consultant.\"",
+    "fields": [
+      {
+        "name": "is_public_company",
+        "type": "boolean",
+        "enum": [],
+        "description": "Whether the company is publicly traded."
+      }
+    ],
+    "optional": true,
+    "transitions": [
+      {
+        "say": "Perfect — I have what I need.",
+        "target": "schedule consultation"
+      }
+    ]
+  },
+  {
+    "name": "schedule consultation",
+    "say": "Let me connect you with the right product consultant now.",
+    "outcome": "qualified"
+  },
+  {
+    "name": "soft letdown",
+    "instruction": "Politely disengage. Keep it brief, helpful, and leave the door open.\n\nBy disqualification reason:\n- insufficient_user_count: \"Thanks for your time, {contact_name}. Based on what you've shared, I'd recommend checking out our free plan at monday.com — it's perfect for smaller teams and you can always scale up later.\"\n- no_clear_need: \"I appreciate you taking the time to chat, {contact_name}. It sounds like you're in exploration mode right now. I'd suggest browsing our resource center at monday.com when you're ready to dig deeper into specific workflows.\"\n- refused_to_answer: \"No worries, {contact_name}. I totally understand if you'd prefer to explore on your own first. Feel free to check out monday.com and reach out again when you're ready to chat specifics.\"\n- support_request / billing_request: \"Perfect — I've already raised that ticket for you, {contact_name}. Our support team will reach out via email shortly with next steps.\"\n\nAlways end with: \"Thanks again, and have a great day!\"\n\nThen immediately end the call. No additional questions or offers. Keep the entire interaction under 30 seconds.",
+    "outcome": "disqualified",
+    "transitions": [
+      {
+        "description": "After delivering the soft letdown message and the user responds",
+        "target": "hang up"
+      }
+    ]
+  },
+  {
+    "name": "hang up",
+    "enabled": false
+  }
+]

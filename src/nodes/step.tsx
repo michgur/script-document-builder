@@ -87,7 +87,7 @@ export function createEmptyStep() {
 export const StepNode = Node.create({
   name: "step",
   group: "block",
-  content: "step_title say? instruction? collect* branch? composer",
+  content: "step_title say? instruction? collect* branch? transition? composer",
   isolating: true,
   defining: true,
   draggable: true,

@@ -15,10 +15,10 @@ import {
   type ComposerSuggestionsProps,
   type ComposerSuggestionsRef,
 } from "../components/ComposerSuggestions";
-import { BranchCaseNode, BranchNode } from "../nodes/branch";
 import { CollectNode } from "../nodes/collect";
 import { InstructionNode } from "../nodes/instruction";
 import { StepNode } from "../nodes/step";
+import { TransitionCaseNode, TransitionNode } from "../nodes/transitions";
 import { findParentStepNode } from "./editor-utils";
 import { reactSuggestionRenderer } from "./react-suggestion-renderer";
 
@@ -92,11 +92,12 @@ const COMPOSER_SUGGESTIONS: ComposerSuggestionItem[] = [
     description: "Define how to choose next step",
     aliases: ["transitions", "branches", "if", "goto"],
     icon: SplitIcon,
-    run: addToStep(BranchNode.name, ({ editor }) => {
-      const branchCase = getNodeType(BranchCaseNode.name, editor.schema);
-      const branch = getNodeType(BranchNode.name, editor.schema);
-      return branch.createAndFill(undefined, branchCase.createAndFill());
+    run: addToStep(TransitionNode.name, ({ editor }) => {
+      const transition = getNodeType(TransitionNode.name, editor.schema);
+      const transitionCase = getNodeType(TransitionCaseNode.name, editor.schema);
+      return transition.createAndFill(undefined, transitionCase.createAndFill());
     }),
+    isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== "transition"),
   },
 ];
 

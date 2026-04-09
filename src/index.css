@@ -27,14 +27,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.tiptap-editor .is-empty::before {
+.tiptap-editor
+  .is-empty.react-renderer
+  > [data-node-view-wrapper]
+  > [data-node-view-content]::before,
+.tiptap-editor .is-empty:not(.react-renderer)::before {
   @apply text-zinc-400;
 
-  content: attr(data-placeholder);
+  content: var(--placeholder);
   float: left;
   height: 0;
   pointer-events: none;
 }
 
-@custom-variant prose-selected (&:where(.ProseMirror-selectednode>[data-node-view-wrapper], .ProseMirror-selectednode>[data-node-view-wrapper]>*)) {
+@custom-variant tt-selected (&:where(.ProseMirror-selectednode>[data-node-view-wrapper], .ProseMirror-selectednode>[data-node-view-wrapper]>*)) {
+}
+
+@custom-variant tt-focus (&.tt-focus, &:where(.react-renderer.tt-focus>*)) {
+}
+
+@theme {
+  --color-selection: color-mix(in oklch, var(--color-blue-200) 40%, white);
 }
