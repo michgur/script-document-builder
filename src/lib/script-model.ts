@@ -22,6 +22,7 @@ export type Step = {
   instruction?: string;
   fields?: Field[];
   transitions?: Transition[];
+  disabled?: boolean;
 };
 
 export type Script = {
@@ -57,10 +58,86 @@ function inlineContent(text: string): JSONContent[] {
     ]);
 }
 
-const FIELD_TYPE_OPTIONS_ATTR = "string\nnumber\nboolean";
-
 function parseFieldType(rawType: unknown): Field["type"] {
   return rawType === "number" || rawType === "boolean" || rawType === "string" ? rawType : "string";
+}
+
+function normalizeField(field: Partial<Field>, fallbackName = ""): Field {
+  const enumValues = (field.enum ?? [])
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const description =
+    typeof field.description === "string" && field.description.trim().length > 0
+      ? field.description.trim()
+      : undefined;
+  const name = typeof field.name === "string" ? field.name.trim() : "";
+
+  return {
+    name: name.length > 0 ? name : fallbackName,
+    type: parseFieldType(field.type),
+    ...(enumValues.length > 0 && { enum: enumValues }),
+    ...(description && { description }),
+  };
+}
+
+function serializeFieldAttr(field: Field): string {
+  return JSON.stringify(normalizeField(field));
+}
+
+function parseFieldAttr(raw: unknown, fallbackName: string): Field {
+  if (typeof raw === "string") {
+    const value = raw.trim();
+    if (value.length > 0) {
+      try {
+        const parsed = JSON.parse(value) as unknown;
+        if (parsed && typeof parsed === "object") {
+          return normalizeField(parsed as Partial<Field>, fallbackName);
+        }
+      } catch {
+        return normalizeField({ name: value, type: "string" }, fallbackName);
+      }
+    }
+  }
+
+  if (raw && typeof raw === "object") {
+    return normalizeField(raw as Partial<Field>, fallbackName);
+  }
+
+  return normalizeField({ name: fallbackName, type: "string" }, fallbackName);
+}
+
+function parseLegacyFieldCases(stepName: string, fieldsNode: JSONContent): Field[] {
+  return (fieldsNode.content ?? [])
+    .filter((fieldNode) => fieldNode.type === "field_case")
+    .map<Field>((fieldNode, idx) => {
+      const parts = fieldNode.content ?? [];
+      const fieldName = textContent(parts.find((p) => p.type === "field_name"));
+      const typeNode = parts.find((p) => p.type === "field_type");
+      const comboboxType = typeNode?.content?.find((n) => n.type === "combobox")?.attrs?.value;
+      const rawType =
+        typeof comboboxType === "string"
+          ? comboboxType.trim()
+          : (textContent(typeNode)?.trim() ?? "");
+      const enumText = textContent(parts.find((p) => p.type === "field_enum")) ?? "";
+      const enumValues = enumText
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      const description = textContent(parts.find((p) => p.type === "field_description")) ?? "";
+
+      return normalizeField(
+        {
+          name: fieldName ?? "",
+          type: parseFieldType(rawType),
+          ...(enumValues.length > 0 && { enum: enumValues }),
+          ...(description.trim().length > 0 && {
+            description: description.trim(),
+          }),
+        },
+        `${stepName}_field_${idx + 1}`,
+      );
+    });
 }
 
 function parseLegacyCollectFields(stepName: string, nodes: JSONContent[]): Field[] {
@@ -113,50 +190,12 @@ export function compileToEditorJson(script: Script): JSONContent {
     if (step.fields && step.fields.length > 0) {
       content.push({
         type: "fields",
-        content: [
-          { type: "field_summary" },
-          ...step.fields.map<JSONContent>((field) => {
-            const fieldCaseContent: JSONContent[] = [
-              {
-                type: "field_name",
-                content:
-                  field.name.trim().length > 0 ? [{ type: "text", text: field.name.trim() }] : [],
-              },
-              {
-                type: "field_type",
-                content: [
-                  {
-                    type: "combobox",
-                    attrs: {
-                      value: field.type,
-                      placeholder: "type",
-                      options: FIELD_TYPE_OPTIONS_ATTR,
-                    },
-                  },
-                ],
-              },
-            ];
-
-            if (field.enum && field.enum.length > 0) {
-              fieldCaseContent.push({
-                type: "field_enum",
-                content: [{ type: "text", text: field.enum.join(", ") }],
-              });
-            }
-
-            if (field.description && field.description.trim().length > 0) {
-              fieldCaseContent.push({
-                type: "field_description",
-                content: [{ type: "text", text: field.description.trim() }],
-              });
-            }
-
-            return {
-              type: "field_case",
-              content: fieldCaseContent,
-            };
-          }),
-        ],
+        content: step.fields.map<JSONContent>((field, idx) => ({
+          type: "field",
+          attrs: {
+            field: serializeFieldAttr(normalizeField(field, `${step.name}_field_${idx + 1}`)),
+          },
+        })),
       });
     }
 
@@ -240,39 +279,20 @@ export function compileFromEditorJson(doc: JSONContent): Script {
         const instructionNode = content.find((n) => n.type === "instruction");
         const instruction = (instructionNode && paragraphContent(instructionNode)) ?? undefined;
         const fieldsNode = content.find((n) => n.type === "fields");
-        const fields =
+        const fieldsFromAttr =
           fieldsNode?.content
-            ?.filter((fieldNode) => fieldNode.type === "field_case")
-            .map<Field>((fieldNode, idx) => {
-              const parts = fieldNode.content ?? [];
-              const fieldName = textContent(parts.find((p) => p.type === "field_name"));
-              const typeNode = parts.find((p) => p.type === "field_type");
-              const comboboxType = typeNode?.content?.find((n) => n.type === "combobox")?.attrs
-                ?.value;
-              const rawType =
-                typeof comboboxType === "string"
-                  ? comboboxType.trim()
-                  : (textContent(typeNode)?.trim() ?? "");
-              const enumText = textContent(parts.find((p) => p.type === "field_enum")) ?? "";
-              const enumValues = enumText
-                .split(",")
-                .map((value) => value.trim())
-                .filter(Boolean);
-              const description =
-                textContent(parts.find((p) => p.type === "field_description")) ?? undefined;
-
-              return {
-                name:
-                  (fieldName && fieldName.trim().length > 0 ? fieldName.trim() : undefined) ??
-                  `${name}_field_${idx + 1}`,
-                type: parseFieldType(rawType),
-                ...(enumValues.length > 0 && { enum: enumValues }),
-                ...(description &&
-                  description.trim().length > 0 && {
-                    description: description.trim(),
-                  }),
-              };
-            }) ?? parseLegacyCollectFields(name, content);
+            ?.filter((fieldNode) => fieldNode.type === "field")
+            .map((fieldNode, idx) =>
+              parseFieldAttr(fieldNode.attrs?.field, `${name}_field_${idx + 1}`),
+            ) ?? [];
+        const fieldsFromLegacyCases =
+          fieldsFromAttr.length > 0 || !fieldsNode ? [] : parseLegacyFieldCases(name, fieldsNode);
+        const fields =
+          fieldsFromAttr.length > 0
+            ? fieldsFromAttr
+            : fieldsFromLegacyCases.length > 0
+              ? fieldsFromLegacyCases
+              : parseLegacyCollectFields(name, content);
 
         const transitionsNode = content.find((n) => n.type === "transition");
         const transitions =

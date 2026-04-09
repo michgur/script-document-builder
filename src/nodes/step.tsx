@@ -1,7 +1,7 @@
 import * as Ariakit from "@ariakit/react";
-import { mergeAttributes, Node } from "@tiptap/core";
+import { mergeAttributes, Node, type NodeViewProps } from "@tiptap/core";
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
-import { CopyIcon, GripVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, CopyIcon, GripVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { cn } from "../lib/utils";
 
@@ -101,44 +101,77 @@ export const StepNode = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(({ editor, getPos, node }) => {
-      const runAtStepPosition = (action: (position: number) => void) => {
-        const pos = getPos();
-        if (pos) action(pos);
-      };
-
-      return (
-        <NodeViewWrapper className="group flex gap-1">
-          <StepHandleMenu
-            onInsertAbove={() => {
-              runAtStepPosition((position) => {
-                editor.commands.insertContentAt(position, createEmptyStep());
-                editor.commands.focus(position);
-              });
-            }}
-            onInsertBelow={() => {
-              runAtStepPosition((position) => {
-                editor.commands.insertContentAt(position + node.nodeSize, createEmptyStep());
-                editor.commands.focus(position + node.nodeSize);
-              });
-            }}
-            onDuplicate={() => {
-              runAtStepPosition((position) => {
-                editor.commands.insertContentAt(position + node.nodeSize, node.toJSON());
-              });
-            }}
-            onDelete={() => {
-              runAtStepPosition((position) => {
-                editor.commands.deleteRange({
-                  from: position,
-                  to: position + node.nodeSize,
-                });
-              });
-            }}
-          />
-          <NodeViewContent className="*:flex *:flex-col" />
-        </NodeViewWrapper>
-      );
-    });
+    return ReactNodeViewRenderer(Step);
   },
 });
+
+function Step({ editor, getPos, node }: NodeViewProps) {
+  const runAtStepPosition = (action: (position: number) => void) => {
+    const pos = getPos();
+    if (pos) action(pos);
+  };
+
+  const sources: [string, number][] = [];
+  const title = node.firstChild?.textContent;
+  editor.state.doc.children.forEach((step, idx) =>
+    step.descendants((dec) => {
+      if (dec.type.name === "transition_target") {
+        if (dec.textContent === title && step.firstChild?.textContent)
+          sources.push([step.firstChild.textContent, idx]);
+        return false;
+      }
+      return true;
+    }),
+  );
+
+  return (
+    <NodeViewWrapper className="group mb-4 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] gap-1">
+      <ul className="col-span-2 ps-6 text-xs">
+        {sources.map(([s, i]) => (
+          <li>
+            <button
+              className="flex w-fit cursor-pointer gap-1 rounded-sm px-2 py-1 text-blue-600 opacity-50 hover:bg-blue-50 hover:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+
+                editor.commands.focus(editor.state.doc.resolve(0).posAtIndex(i) + s.length + 2);
+              }}
+            >
+              <ArrowLeftIcon className="size-4 text-blue-400" />
+              {s}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <StepHandleMenu
+        onInsertAbove={() => {
+          runAtStepPosition((position) => {
+            editor.commands.insertContentAt(position, createEmptyStep());
+            editor.commands.focus(position);
+          });
+        }}
+        onInsertBelow={() => {
+          runAtStepPosition((position) => {
+            editor.commands.insertContentAt(position + node.nodeSize, createEmptyStep());
+            editor.commands.focus(position + node.nodeSize);
+          });
+        }}
+        onDuplicate={() => {
+          runAtStepPosition((position) => {
+            editor.commands.insertContentAt(position + node.nodeSize, node.toJSON());
+          });
+        }}
+        onDelete={() => {
+          runAtStepPosition((position) => {
+            editor.commands.deleteRange({
+              from: position,
+              to: position + node.nodeSize,
+            });
+          });
+        }}
+      />
+      <NodeViewContent className="*:flex *:flex-col" />
+    </NodeViewWrapper>
+  );
+}

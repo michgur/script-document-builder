@@ -257,6 +257,6 @@
   },
   {
     "name": "hang up",
-    "enabled": false
+    "disabled": true
   }
 ]

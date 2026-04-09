@@ -270,7 +270,7 @@ export default function EditorMinimap({ editor, content }: EditorMinimapProps) {
   if (steps.length === 0) return null;
 
   return (
-    <aside className="sticky top-10 hidden max-h-[calc(100vh-5rem)] w-42 shrink-0 overflow-y-auto md:block">
+    <aside className="sticky top-10 hidden max-h-[calc(100vh-5rem)] w-42 shrink-0 overflow-y-auto py-12 md:block">
       <nav aria-label="Step minimap">
         <h4 className="mb-1 text-sm font-medium">Script</h4>
         <ol className="border-s-2 border-zinc-200">

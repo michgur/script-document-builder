@@ -1,6 +1,6 @@
 import { Editor, findParentNode, type Attribute, type KeyboardShortcutCommand } from "@tiptap/core";
 import type { Node, NodeType, ResolvedPos } from "@tiptap/pm/model";
-import type { Selection } from "@tiptap/pm/state";
+import { NodeSelection, type Selection } from "@tiptap/pm/state";
 
 type StepContext = {
   stepNode: Node;
@@ -13,12 +13,21 @@ export function whenSelected(
   handler: (props: { editor: Editor; node: Node; pos: number }) => boolean | void,
   options?: {
     allowNonempty?: boolean;
+    nodeSelection?: boolean;
   },
 ): KeyboardShortcutCommand {
   return ({ editor }) => {
     const { selection } = editor.state;
-    if (!selection.empty && !options?.allowNonempty) return false;
 
+    if (
+      options?.nodeSelection &&
+      selection instanceof NodeSelection &&
+      selection.node.type.name === type
+    ) {
+      return handler({ editor, node: selection.node, pos: selection.from }) ?? false;
+    }
+
+    if (!selection.empty && !options?.allowNonempty) return false;
     const match = findParentNode((node) => node.type.name === type)(selection);
     if (!match) return false;
 

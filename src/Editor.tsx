@@ -12,16 +12,7 @@ import { Placeholder } from "./lib/placeholder";
 import { BranchActionNode, BranchCaseNode, BranchConditionNode, BranchNode } from "./nodes/branch";
 import { ComboboxNode } from "./nodes/combobox";
 import { ComposerNode } from "./nodes/composer";
-import {
-  FieldCaseNode,
-  FieldDescriptionNode,
-  FieldEnumNode,
-  FieldNameNode,
-  FieldSummaryNode,
-  FieldsNode,
-  FieldSentenceNode,
-  FieldTypeNode,
-} from "./nodes/fields";
+import { FieldNode, FieldsNode } from "./nodes/fields";
 import { InstructionNode } from "./nodes/instruction";
 import { SayNode } from "./nodes/say";
 import { StepNode } from "./nodes/step";
@@ -82,20 +73,14 @@ export default function Editor({
       SayNode,
       ComposerNode,
       InstructionNode,
+      FieldsNode,
+      FieldNode,
       StepNode,
       ComboboxNode,
       BranchActionNode,
       BranchConditionNode,
       BranchCaseNode,
       BranchNode,
-      FieldsNode,
-      FieldSummaryNode,
-      FieldCaseNode,
-      FieldNameNode,
-      FieldTypeNode,
-      FieldEnumNode,
-      FieldDescriptionNode,
-      FieldSentenceNode,
       TransitionNode,
       TransitionSummaryNode,
       TransitionCaseNode,
@@ -124,9 +109,7 @@ export default function Editor({
               [TransitionConditionNode.name]: "Condition...",
               [TransitionDescriptionNode.name]: "AI Condition...",
               [TransitionTargetNode.name]: "Target step...",
-              [FieldNameNode.name]: "Field name...",
-              [FieldEnumNode.name]: "value_a, value_b",
-              [FieldDescriptionNode.name]: "Field description...",
+              [FieldsNode.name]: "Field name...",
             }[node.type.name] ?? ""
           );
         },
@@ -161,5 +144,5 @@ export default function Editor({
     return () => onEditorReady(null);
   }, [editor, onEditorReady]);
 
-  return <EditorContent editor={editor} />;
+  return <EditorContent className="pb-16" editor={editor} />;
 }

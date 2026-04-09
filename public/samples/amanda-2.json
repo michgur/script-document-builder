@@ -128,7 +128,7 @@
   },
   {
     "name": "schedule consultation",
-    "enabled": false
+    "disabled": true
   },
   {
     "name": "soft letdown",
@@ -143,6 +143,6 @@
   },
   {
     "name": "hang up",
-    "enabled": false
+    "disabled": true
   }
 ]

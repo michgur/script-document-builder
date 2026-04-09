@@ -139,14 +139,11 @@ export const TransitionNode = Node.create({
 
 function Transitions() {
   return (
-    <NodeViewWrapper className="my-2 min-w-40">
-      <h4
-        contentEditable={false}
-        className="text-xs font-medium tracking-wide text-zinc-500 uppercase"
-      >
+    <NodeViewWrapper className="my-4 min-w-40">
+      <h4 contentEditable={false} className="mb-1 text-xs font-medium tracking-wide text-blue-500">
         Transitions
       </h4>
-      <NodeViewContent className="min-h-6 leading-6 outline-none" />
+      <NodeViewContent className="min-h-6 leading-6 text-blue-900 outline-none" />
     </NodeViewWrapper>
   );
 }
@@ -187,9 +184,9 @@ function TransitionCase({ editor, getPos, node }: ReactNodeViewProps) {
   );
   const showMenu = showButtons.some(Boolean);
   return (
-    <NodeViewWrapper className="group grid grid-cols-[auto_1fr] grid-rows-[1fr_auto] items-center gap-x-1 tt-selected:bg-selection tt-focus:[&_menu]:h-auto tt-focus:[&_menu]:opacity-100">
+    <NodeViewWrapper className="group grid grid-cols-[auto_1fr] grid-rows-[1fr_auto] items-center gap-x-1 tt-selected:bg-selection tt-focus:[&_menu]:my-1 tt-focus:[&_menu]:h-auto tt-focus:[&_menu]:opacity-100">
       <div contentEditable={false} className="flex h-lh items-center self-start">
-        <ArrowRightIcon className="size-4 text-zinc-400" />
+        <ArrowRightIcon className="size-4 text-blue-400" />
       </div>
       <NodeViewContent />
       {showMenu && (

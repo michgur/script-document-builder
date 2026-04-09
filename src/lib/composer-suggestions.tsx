@@ -3,8 +3,8 @@ import { NodeType, type Node } from "@tiptap/pm/model";
 import { TextSelection, type Plugin } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
 import {
-  ClipboardPenIcon,
   CompassIcon,
+  ListFilterIcon,
   SplitIcon,
   StepForwardIcon,
   type LucideIcon,
@@ -15,7 +15,7 @@ import {
   type ComposerSuggestionsProps,
   type ComposerSuggestionsRef,
 } from "../components/ComposerSuggestions";
-import { createFieldCaseNode, FieldSummaryNode, FieldsNode } from "../nodes/fields";
+import { FieldsNode } from "../nodes/fields";
 import { InstructionNode } from "../nodes/instruction";
 import { StepNode } from "../nodes/step";
 import { TransitionCaseNode, TransitionNode, TransitionSummaryNode } from "../nodes/transitions";
@@ -82,17 +82,11 @@ const COMPOSER_SUGGESTIONS: ComposerSuggestionItem[] = [
   },
   {
     title: "Fields",
-    description: "Define values to collect from this step",
-    aliases: ["fields", "collect", "value"],
-    icon: ClipboardPenIcon,
-    run: addToStep(FieldsNode.name, ({ editor }) => {
-      const fields = getNodeType(FieldsNode.name, editor.schema);
-      const summary = getNodeType(FieldSummaryNode.name, editor.schema).createAndFill();
-      const fieldCase = createFieldCaseNode(editor.schema);
-      if (!summary) return null;
-      return fields.createAndFill(undefined, [summary, fieldCase]);
-    }),
-    isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== "fields"),
+    description: "Add a fields list",
+    aliases: ["fields", "collect", "list"],
+    icon: ListFilterIcon,
+    run: addToStep(FieldsNode.name),
+    isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== FieldsNode.name),
   },
   {
     title: "Transitions",
