@@ -1,3 +1,4 @@
+import type { Editor as TiptapEditor } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Dropcursor from "@tiptap/extension-dropcursor";
 import Focus from "@tiptap/extension-focus";
@@ -16,6 +17,7 @@ import {
   FieldDescriptionNode,
   FieldEnumNode,
   FieldNameNode,
+  FieldSummaryNode,
   FieldsNode,
   FieldSentenceNode,
   FieldTypeNode,
@@ -28,6 +30,7 @@ import {
   TransitionCaseNode,
   TransitionSentenceNode,
   TransitionNode,
+  TransitionSummaryNode,
   TransitionTargetNode,
   TransitionConditionNode,
   TransitionDescriptionNode,
@@ -63,9 +66,11 @@ const initialContent: JSONContent = {
 export default function Editor({
   onChange,
   externalContent,
+  onEditorReady,
 }: {
   onChange?: (value: JSONContent) => void;
   externalContent?: JSONContent;
+  onEditorReady?: (editor: TiptapEditor | null) => void;
 }) {
   const editor = useEditor({
     extensions: [
@@ -84,6 +89,7 @@ export default function Editor({
       BranchCaseNode,
       BranchNode,
       FieldsNode,
+      FieldSummaryNode,
       FieldCaseNode,
       FieldNameNode,
       FieldTypeNode,
@@ -91,6 +97,7 @@ export default function Editor({
       FieldDescriptionNode,
       FieldSentenceNode,
       TransitionNode,
+      TransitionSummaryNode,
       TransitionCaseNode,
       TransitionTargetNode,
       TransitionConditionNode,
@@ -147,6 +154,12 @@ export default function Editor({
     if (!editor || externalContent?.type !== "doc") return;
     editor.commands.setContent(externalContent);
   }, [editor, externalContent]);
+
+  useEffect(() => {
+    if (!onEditorReady) return;
+    onEditorReady(editor);
+    return () => onEditorReady(null);
+  }, [editor, onEditorReady]);
 
   return <EditorContent editor={editor} />;
 }

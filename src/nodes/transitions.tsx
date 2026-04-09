@@ -21,6 +21,7 @@ import {
   nodeDataAttr,
   whenSelected,
 } from "../lib/editor-utils";
+import { SummaryNode } from "./summary";
 
 export const TransitionSentenceNode = Node.create({
   name: "transition_sentence",
@@ -65,6 +66,19 @@ function transitionSentenceNode(name: string, prefix?: string) {
 }
 
 export const TransitionTargetNode = transitionSentenceNode("transition_target", "Go to");
+export const TransitionSummaryNode = SummaryNode.extend({
+  name: "transition_summary",
+  addAttributes() {
+    const attrs = (this.parent?.() ?? {}) as Record<string, any>;
+    return {
+      ...attrs,
+      label: {
+        ...attrs.label,
+        default: "Transitions",
+      },
+    };
+  },
+});
 export const TransitionConditionNode = transitionSentenceNode("transition_condition", "If");
 export const TransitionDescriptionNode = transitionSentenceNode("transition_description", "When");
 export const TransitionSayNode = transitionSentenceNode("transition_say", "Say");
@@ -114,7 +128,8 @@ export const TransitionNode = Node.create({
   },
 
   onUpdate: whenSelected("transition", ({ editor, node }) => {
-    if (node.childCount === 0) editor.commands.deleteNode("transition");
+    const hasCases = node.children.some((child) => child.type.name === TransitionCaseNode.name);
+    if (!hasCases) editor.commands.deleteNode("transition");
   }),
 
   addNodeView() {
@@ -124,13 +139,13 @@ export const TransitionNode = Node.create({
 
 function Transitions() {
   return (
-    <NodeViewWrapper className="my-4 min-w-40">
-      <div
+    <NodeViewWrapper className="my-2 min-w-40">
+      <h4
         contentEditable={false}
-        className="py-1 text-xs font-medium tracking-wide text-zinc-500 uppercase"
+        className="text-xs font-medium tracking-wide text-zinc-500 uppercase"
       >
         Transitions
-      </div>
+      </h4>
       <NodeViewContent className="min-h-6 leading-6 outline-none" />
     </NodeViewWrapper>
   );

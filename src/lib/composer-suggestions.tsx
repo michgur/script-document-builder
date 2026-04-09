@@ -15,10 +15,10 @@ import {
   type ComposerSuggestionsProps,
   type ComposerSuggestionsRef,
 } from "../components/ComposerSuggestions";
-import { createFieldCaseNode, FieldsNode } from "../nodes/fields";
+import { createFieldCaseNode, FieldSummaryNode, FieldsNode } from "../nodes/fields";
 import { InstructionNode } from "../nodes/instruction";
 import { StepNode } from "../nodes/step";
-import { TransitionCaseNode, TransitionNode } from "../nodes/transitions";
+import { TransitionCaseNode, TransitionNode, TransitionSummaryNode } from "../nodes/transitions";
 import { findParentStepNode } from "./editor-utils";
 import { reactSuggestionRenderer } from "./react-suggestion-renderer";
 
@@ -87,7 +87,10 @@ const COMPOSER_SUGGESTIONS: ComposerSuggestionItem[] = [
     icon: ClipboardPenIcon,
     run: addToStep(FieldsNode.name, ({ editor }) => {
       const fields = getNodeType(FieldsNode.name, editor.schema);
-      return fields.createAndFill(undefined, createFieldCaseNode(editor.schema));
+      const summary = getNodeType(FieldSummaryNode.name, editor.schema).createAndFill();
+      const fieldCase = createFieldCaseNode(editor.schema);
+      if (!summary) return null;
+      return fields.createAndFill(undefined, [summary, fieldCase]);
     }),
     isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== "fields"),
   },
@@ -98,8 +101,12 @@ const COMPOSER_SUGGESTIONS: ComposerSuggestionItem[] = [
     icon: SplitIcon,
     run: addToStep(TransitionNode.name, ({ editor }) => {
       const transition = getNodeType(TransitionNode.name, editor.schema);
+      const transitionSummary = getNodeType(TransitionSummaryNode.name, editor.schema);
       const transitionCase = getNodeType(TransitionCaseNode.name, editor.schema);
-      return transition.createAndFill(undefined, transitionCase.createAndFill());
+      const summary = transitionSummary.createAndFill();
+      const firstCase = transitionCase.createAndFill();
+      if (!summary || !firstCase) return null;
+      return transition.createAndFill(undefined, [summary, firstCase]);
     }),
     isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== "transition"),
   },

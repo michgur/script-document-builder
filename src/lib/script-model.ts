@@ -113,47 +113,50 @@ export function compileToEditorJson(script: Script): JSONContent {
     if (step.fields && step.fields.length > 0) {
       content.push({
         type: "fields",
-        content: step.fields.map<JSONContent>((field) => {
-          const fieldCaseContent: JSONContent[] = [
-            {
-              type: "field_name",
-              content:
-                field.name.trim().length > 0 ? [{ type: "text", text: field.name.trim() }] : [],
-            },
-            {
-              type: "field_type",
-              content: [
-                {
-                  type: "combobox",
-                  attrs: {
-                    value: field.type,
-                    placeholder: "type",
-                    options: FIELD_TYPE_OPTIONS_ATTR,
+        content: [
+          { type: "field_summary" },
+          ...step.fields.map<JSONContent>((field) => {
+            const fieldCaseContent: JSONContent[] = [
+              {
+                type: "field_name",
+                content:
+                  field.name.trim().length > 0 ? [{ type: "text", text: field.name.trim() }] : [],
+              },
+              {
+                type: "field_type",
+                content: [
+                  {
+                    type: "combobox",
+                    attrs: {
+                      value: field.type,
+                      placeholder: "type",
+                      options: FIELD_TYPE_OPTIONS_ATTR,
+                    },
                   },
-                },
-              ],
-            },
-          ];
+                ],
+              },
+            ];
 
-          if (field.enum && field.enum.length > 0) {
-            fieldCaseContent.push({
-              type: "field_enum",
-              content: [{ type: "text", text: field.enum.join(", ") }],
-            });
-          }
+            if (field.enum && field.enum.length > 0) {
+              fieldCaseContent.push({
+                type: "field_enum",
+                content: [{ type: "text", text: field.enum.join(", ") }],
+              });
+            }
 
-          if (field.description && field.description.trim().length > 0) {
-            fieldCaseContent.push({
-              type: "field_description",
-              content: [{ type: "text", text: field.description.trim() }],
-            });
-          }
+            if (field.description && field.description.trim().length > 0) {
+              fieldCaseContent.push({
+                type: "field_description",
+                content: [{ type: "text", text: field.description.trim() }],
+              });
+            }
 
-          return {
-            type: "field_case",
-            content: fieldCaseContent,
-          };
-        }),
+            return {
+              type: "field_case",
+              content: fieldCaseContent,
+            };
+          }),
+        ],
       });
     }
 

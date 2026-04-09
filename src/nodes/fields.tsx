@@ -16,6 +16,7 @@ import {
   nodeDataAttr,
   whenSelected,
 } from "../lib/editor-utils";
+import { SummaryNode } from "./summary";
 
 export const FIELD_TYPE_OPTIONS = ["string", "number", "boolean"] as const;
 export const FIELD_TYPE_OPTIONS_ATTR = FIELD_TYPE_OPTIONS.join("\n");
@@ -90,6 +91,19 @@ function fieldSentenceNode(name: string, prefix?: string) {
 }
 
 export const FieldNameNode = fieldSentenceNode("field_name", "Name");
+export const FieldSummaryNode = SummaryNode.extend({
+  name: "field_summary",
+  addAttributes() {
+    const attrs = (this.parent?.() ?? {}) as Record<string, any>;
+    return {
+      ...attrs,
+      label: {
+        ...attrs.label,
+        default: "Fields",
+      },
+    };
+  },
+});
 export const FieldEnumNode = fieldSentenceNode("field_enum", "Options");
 export const FieldDescriptionNode = fieldSentenceNode("field_description", "Description");
 
@@ -151,7 +165,7 @@ export const FieldCaseNode = Node.create({
 export const FieldsNode = Node.create({
   name: "fields",
   group: "block",
-  content: "field_case*",
+  content: "field_summary field_case*",
 
   parseHTML() {
     return [{ tag: 'div[data-node-type="fields"]' }];
@@ -161,23 +175,20 @@ export const FieldsNode = Node.create({
   },
 
   onUpdate: whenSelected("fields", ({ editor, node }) => {
-    if (node.childCount === 0) editor.commands.deleteNode("fields");
+    const hasCases = node.children.some((child) => child.type.name === FieldCaseNode.name);
+    if (!hasCases) editor.commands.deleteNode("fields");
   }),
 
   addNodeView() {
-    return ReactNodeViewRenderer(Fields);
+    return ReactNodeViewRenderer(Fields, {
+      contentDOMElementTag: "details",
+    });
   },
 });
 
 function Fields() {
   return (
-    <NodeViewWrapper className="my-4 min-w-40">
-      <div
-        contentEditable={false}
-        className="py-1 text-xs font-medium tracking-wide text-zinc-500 uppercase"
-      >
-        Fields
-      </div>
+    <NodeViewWrapper className="my-2 min-w-40">
       <NodeViewContent className="min-h-6 leading-6 outline-none" />
     </NodeViewWrapper>
   );
