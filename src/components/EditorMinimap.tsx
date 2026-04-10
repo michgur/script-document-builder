@@ -74,7 +74,7 @@ function scrollNodeToTop(node: HTMLElement, anchor: HTMLElement, margin = STEP_S
 
   if (!container) {
     const top = window.scrollY + node.getBoundingClientRect().top - margin;
-    window.scrollTo({ top, behavior: "auto" });
+    window.scrollTo({ top, behavior: "smooth" });
     return;
   }
 
@@ -82,7 +82,7 @@ function scrollNodeToTop(node: HTMLElement, anchor: HTMLElement, margin = STEP_S
   const nodeRect = node.getBoundingClientRect();
   const top = container.scrollTop + (nodeRect.top - containerRect.top) - margin;
 
-  container.scrollTo({ top, behavior: "auto" });
+  container.scrollTo({ top, behavior: "smooth" });
 }
 
 function getStepTitleEndPos(editor: Editor, stepPos: number): number | null {

@@ -1,0 +1,1075 @@
+[
+  {
+    "name": "speak on behalf",
+    "priority": 10,
+    "conditions": "speaker verification = no",
+    "value_type": "approval",
+    "messages": [
+      {
+        "message": "So would you be the right person to speak to on behalf of {contact_name}?"
+      },
+      {
+        "message": "Can I talk to you on their behalf?"
+      }
+    ],
+    "fulfillment": [
+      {
+        "timing": "collected",
+        "conditions": "speak on behalf=yes",
+        "values": {
+          "speaker verification": "yes"
+        }
+      }
+    ],
+    "id": "1"
+  },
+  {
+    "name": "still looking for care",
+    "detection_name": "looking for care",
+    "value_type": "approval",
+    "is_selection": true,
+    "acknowledge": false,
+    "conditions": "speaker verification",
+    "fulfillment": [
+      {
+        "timing": "triggered",
+        "note": "after verifying contact identity, disposition is failed unless overriden",
+        "values": {
+          "disposition": "failed"
+        }
+      }
+    ],
+    "messages": [
+      {
+        "message": "I'm an advisor with Care-In-Homes.   Are you still looking for care options?",
+        "conditions": "%call_type% = phone_inbound and %performed_count% = 0"
+      },
+      {
+        "message": "My name is {%agent_name%}, I'm an advisor with Care-In-Homes, are you still looking for care?",
+        "conditions": "%call_type% = phone_inbound"
+      },
+      {
+        "message": "Are you interested in getting options for companion care?"
+      },
+      {
+        "message": "So, would you like to hear care options?"
+      },
+      {
+        "message": "Are you open to hear our options for care?"
+      },
+      {
+        "message": "Just to make sure I understood, are you still looking for care?"
+      }
+    ],
+    "choices": [
+      {
+        "name": "yes",
+        "acknowledge": false,
+        "fulfillment": [
+          {
+            "timing": "collected",
+            "values": {
+              "disposition": "failed"
+            },
+            "call_result": "contact_verified"
+          }
+        ],
+        "id": "2.1"
+      },
+      {
+        "name": "no",
+        "goals": [
+          {
+            "name": "client not interested",
+            "goal_type": "say",
+            "force_exact_response": true,
+            "exclusive_message": true,
+            "conditions": [
+              {
+                "field": "still looking for care",
+                "value": "no"
+              }
+            ],
+            "messages": [
+              {
+                "message": "[SPEED=0.8]Ok, Thank you for your time and please feel free to call us in the future should your care needs change!"
+              }
+            ],
+            "fulfillment": [
+              {
+                "timing": "performed",
+                "values": {},
+                "voice_action": "hang_up"
+              }
+            ],
+            "id": "2.2.1"
+          }
+        ],
+        "id": "2.2",
+        "fulfillment": [
+          {
+            "timing": "collected",
+            "values": {
+              "disposition": "no_longer_interested"
+            },
+            "call_result": "disqualified"
+          }
+        ]
+      }
+    ],
+    "id": "2"
+  },
+  {
+    "name": "search_zip",
+    "conditions": "still looking for care = yes",
+    "detection_name": "zip code",
+    "options": {
+      "range": [
+        11111,
+        999999
+      ]
+    },
+    "goal_type": "ask",
+    "value_type": "custom",
+    "acknowledge": "thank you, I'll update our records",
+    "messages": [
+      {
+        "message": "Would you please share the the zip code where you need care?"
+      },
+      {
+        "message": "Can I get the zip code for the address that required care?"
+      }
+    ],
+    "fulfillment": [
+      {
+        "timing": "performed",
+        "values": {
+          "zip code verification": "yes"
+        }
+      }
+    ],
+    "objection_handling": [
+      "This information is needed for us to offer you the most suitable service provider"
+    ],
+    "id": "3"
+  },
+  {
+    "name": "zip code verification",
+    "value_type": "approval",
+    "is_selection": true,
+    "acknowledge": false,
+    "force_exact_response": false,
+    "conditions": "search_zip and still looking for care = yes",
+    "messages": [
+      {
+        "message": "I just need to confirm the care details you provided us. Is the zip code where you need care [SPEED=0.85] {search_zip:digits_no_grouping}?"
+      },
+      {
+        "message": "Can you confirm the zipcode where you need care for is [SPEED=0.85]  {search_zip:digits_no_grouping}?"
+      }
+    ],
+    "choices": [
+      {
+        "name": "yes",
+        "validation_prompt": [
+          "user zip code is {search_zip}"
+        ],
+        "id": "4.1"
+      },
+      {
+        "name": "no",
+        "acknowledge": "oh ok,",
+        "goals": [
+          {
+            "name": "updated zip code",
+            "detection_name": "zip code",
+            "options": {
+              "range": [
+                11111,
+                999999
+              ]
+            },
+            "goal_type": "ask",
+            "value_type": "custom",
+            "acknowledge": "thank you, I'll get that updated.",
+            "messages": [
+              {
+                "message": "would you please share the correct zip code?"
+              },
+              {
+                "message": "what should I put down as your zip code?"
+              }
+            ],
+            "objection_handling": [
+              "We just need it for us to offer you the best care options."
+            ],
+            "fulfillment": [
+              {
+                "timing": "collected",
+                "values": {
+                  "search_zip": "{updated zip code:.0f}"
+                }
+              }
+            ],
+            "id": "4.2.1"
+          }
+        ],
+        "id": "4.2"
+      }
+    ],
+    "id": "4"
+  },
+  {
+    "name": "care recipient",
+    "value_type": "selection",
+    "messages": [
+      {
+        "message": "Who is the care for? Mother, father, spouse, self or other?",
+        "explicit_part": "Who is the care for?"
+      },
+      {
+        "message": "Just to clarify, who is the care for? Mother, father, spouse, self or other?",
+        "explicit_part": "Who is the care for?"
+      }
+    ],
+    "choices": [
+      {
+        "name": "Mother",
+        "id": "5.1"
+      },
+      {
+        "name": "Father",
+        "id": "5.2"
+      },
+      {
+        "name": "Spouse",
+        "id": "5.3"
+      },
+      {
+        "name": "Self",
+        "id": "5.4"
+      },
+      {
+        "name": "Other",
+        "id": "5.5"
+      }
+    ],
+    "id": "5"
+  },
+  {
+    "name": "type of services",
+    "value_type": "selection",
+    "detection_model": "llm_function",
+    "is_selection": true,
+    "acknowledge": false,
+    "force_exact_response": false,
+    "explicit_part": "Are you looking for in-home care, Assisted living, or both?",
+    "messages": [
+      {
+        "message": "I see you are needing {interests:cleanup} care, can you confirm if it's in-home care, Assisted living, or both?"
+      },
+      {
+        "message": "Are you looking for in-home care, Assisted living, or both options?"
+      }
+    ],
+    "choices": [
+      {
+        "name": "in-home",
+        "acknowledge": false,
+        "id": "6.1"
+      },
+      {
+        "name": "assisted-living",
+        "id": "6.2"
+      },
+      {
+        "name": "both",
+        "id": "6.3"
+      }
+    ],
+    "fulfillment": [
+      {
+        "timing": "collected",
+        "conditions": "type of services = in-home",
+        "values": {
+          "updated_interests": [
+            "in_home"
+          ]
+        }
+      },
+      {
+        "timing": "collected",
+        "conditions": "type of services = assisted-living",
+        "values": {
+          "updated_interests": [
+            "assisted_living"
+          ]
+        }
+      },
+      {
+        "timing": "collected",
+        "conditions": "type of services = both",
+        "values": {
+          "updated_interests": [
+            "in_home",
+            "assisted_living"
+          ]
+        }
+      }
+    ],
+    "id": "6"
+  },
+  {
+    "name": "care service timeline",
+    "value_type": "selection",
+    "detection_model": "llm_function",
+    "acknowledge": false,
+    "messages": [
+      {
+        "message": "Just a couple more quick questions. Are you looking to start services immediately, within 30 days or over 30 days?"
+      },
+      {
+        "message": "When would you like to begin care service? In the next 30 days or later?"
+      }
+    ],
+    "objection_handling": [
+      "This will help me understand your urgency."
+    ],
+    "choices": [
+      {
+        "name": "Immediately",
+        "id": "7.1"
+      },
+      {
+        "name": "Within 30 days",
+        "id": "7.2"
+      },
+      {
+        "name": "Over 30 days",
+        "id": "7.3"
+      },
+      {
+        "name": "Just gathering information",
+        "id": "7.4"
+      }
+    ],
+    "fulfillment": [
+      {
+        "timing": "collected",
+        "note": "API does not have 'over 30 days' option but we want to have it for the AI to better understand the options, so we map the values",
+        "conditions": "care service timeline = Over 30 days",
+        "values": {
+          "care service timeline": "Just gathering information"
+        }
+      }
+    ],
+    "id": "7"
+  },
+  {
+    "name": "number of weekly care days",
+    "enabled": false,
+    "options": {
+      "range": [
+        1,
+        7
+      ]
+    },
+    "validation_prompt": "Return the number of days each week that the senior care is needed",
+    "value_type": "custom",
+    "detection_model": "llm_function",
+    "acknowledge": "thank you",
+    "messages": [
+      {
+        "message": "How many days of care are needed each week? "
+      },
+      {
+        "message": "Would you estimate how many days care is needed weekly?"
+      },
+      {
+        "message": "A rough estimate will do. How many days of care you think are needed each week?"
+      }
+    ],
+    "objection_handling": [
+      "I won't be able to help you without knowing the required number of days"
+    ],
+    "fulfillment": [
+      {
+        "timing": "collected",
+        "conditions": "number of weekly care days <= 3",
+        "values": {
+          "number of weekly care days": "3 days or less"
+        }
+      },
+      {
+        "timing": "collected",
+        "conditions": "number of weekly care days >=4 and number of weekly care days <= 5",
+        "values": {
+          "number of weekly care days": "4 or 5 days"
+        }
+      },
+      {
+        "timing": "collected",
+        "conditions": "number of weekly care days >= 6",
+        "values": {
+          "number of weekly care days": "6 or more days"
+        }
+      }
+    ],
+    "id": "8"
+  },
+  {
+    "name": "number of daily care hours",
+    "enabled": false,
+    "options": {
+      "range": [
+        1,
+        24
+      ]
+    },
+    "validation_prompt": "Return the number of hours a day that the senior care is needed.",
+    "value_type": "custom",
+    "detection_model": "llm_function",
+    "acknowledge": "Ok thanks.",
+    "messages": [
+      {
+        "message": "How many hours of care are needed each day?  "
+      },
+      {
+        "message": "Approximately, what is the number of hours care is needed each day?"
+      },
+      {
+        "message": "So I need at least an estimate, how many care hours are needed each day?"
+      }
+    ],
+    "objection_handling": [
+      "We use this information to find the perefect match for your needs."
+    ],
+    "fulfillment": [
+      {
+        "timing": "collected",
+        "conditions": "number of daily care hours < 4",
+        "values": {
+          "number of daily care hours": "Less than 4 hours"
+        }
+      },
+      {
+        "timing": "collected",
+        "conditions": "number of daily care hours >=4 and number of daily care hours <= 8",
+        "values": {
+          "number of daily care hours": "4 to 8 hours"
+        }
+      },
+      {
+        "timing": "collected",
+        "conditions": "number of daily care hours > 6",
+        "values": {
+          "number of daily care hours": "More than 8 hours"
+        }
+      }
+    ],
+    "id": "9"
+  },
+  {
+    "name": "financing method",
+    "value_type": "selection",
+    "detection_model": "llm_function",
+    "validation_prompt": "Medicaid and medicare are the same.",
+    "messages": [
+      {
+        "message": "How do you plan on paying for care? Private pay, long term care insurance, medicaid, or public assistance"
+      },
+      {
+        "message": "Just to clarify, how will you be paying for care? Private pay, long term care insurance, medicaid, or public assistance"
+      }
+    ],
+    "goals": [
+      {
+        "name": "Long Term Care Insurance",
+        "id": "10.1"
+      },
+      {
+        "name": "Medicaid/Public Assistance Only",
+        "fulfillment": [
+          {
+            "timing": "collected",
+            "values": {
+              "disposition": "medicare_medicaid"
+            }
+          }
+        ],
+        "goals": [
+          {
+            "name": "willing to pay",
+            "value_type": "approval",
+            "is_selection": true,
+            "messages": [
+              {
+                "message": "Most in-home care services are not covered by insurance, Medicare, Medicaid or public assistance.  Paying out-of pocket is the norm for companion care. Will you be willing to use private funds?"
+              },
+              {
+                "message": "Will you be willing to pay for care with private pay?"
+              }
+            ],
+            "goals": [
+              {
+                "name": "no",
+                "goals": [
+                  {
+                    "name": "end call due to payment method",
+                    "goal_type": "say",
+                    "messages": [
+                      {
+                        "message": "Our partners only accept private pay at this time, you may try calling two-one-one for additional assistance. Have a nice day."
+                      }
+                    ],
+                    "fulfillment": [
+                      {
+                        "timing": "performed",
+                        "trigger": "hang up",
+                        "call_result": "disqualified"
+                      }
+                    ],
+                    "id": "10.2.1.1.1"
+                  }
+                ],
+                "id": "10.2.1.1"
+              },
+              {
+                "name": "yes",
+                "fulfillment": [
+                  {
+                    "timing": "collected",
+                    "values": {
+                      "financing method": "Private funds",
+                      "disposition": "verified"
+                    }
+                  }
+                ],
+                "id": "10.2.1.2"
+              }
+            ],
+            "id": "10.2.1",
+            "force_exact_response": true
+          }
+        ],
+        "id": "10.2"
+      },
+      {
+        "name": "Private funds",
+        "id": "10.3"
+      },
+      {
+        "name": "Other",
+        "id": "10.4"
+      }
+    ],
+    "fulfillment": [
+      {
+        "timing": "collected",
+        "conditions": "financing method != Medicaid/Public Assistance Only",
+        "values": {
+          "disposition": "verified"
+        }
+      }
+    ],
+    "id": "10",
+    "triggers": [
+      "Do you accept medicaid?"
+    ]
+  },
+  {
+    "name": "budget for care",
+    "enabled": false,
+    "value_type": "unit",
+    "acknowledge": "great.",
+    "repeat": 2,
+    "messages": [
+      {
+        "message": "Last question I have: what is your estimated monthly budget for care?"
+      },
+      {
+        "message": "Do you have any sort of approximate budget in mind?"
+      },
+      {
+        "message": "At least approximately, what is your monthly care budget?"
+      }
+    ],
+    "objection_handling": [
+      "We use this information to find the perfect match for your needs."
+    ],
+    "fulfillment": [
+      {
+        "timing": "collected",
+        "conditions": "budget for care < 1000",
+        "values": {
+          "budget category": "Less than $1000"
+        }
+      },
+      {
+        "timing": "collected",
+        "conditions": "budget for care >= 1000",
+        "values": {
+          "budget category": "Over $1000"
+        }
+      }
+    ],
+    "goals": [
+      {
+        "name": "unlimited budget",
+        "conditions": "financing method = Long Term Care Insurance",
+        "notes": "We allow user to not give a budget only in case they have long-term care insurance",
+        "goal_type": "say",
+        "cost": 100,
+        "trigger_scope": "budget for care",
+        "triggers": [
+          "I don't have a budget",
+          "I don't know"
+        ],
+        "fulfillment": [
+          {
+            "timing": "triggered",
+            "values": {
+              "budget for care": "Long term care insurance",
+              "budget category": "Long term care insurance"
+            }
+          }
+        ],
+        "id": "11.1"
+      }
+    ],
+    "id": "11"
+  },
+  {
+    "name": "email",
+    "acknowledge": "Got it.",
+    "value_type": "custom",
+    "options": {
+      "llm_model": "oneai_value_detection"
+    },
+    "validation_prompt": "return the user's formatted email address '_@_._'. return null if user refuses to provide an email.",
+    "messages": [
+      {
+        "message": "What's the best email address to use?"
+      },
+      {
+        "message": "What email should we have on file for you?"
+      },
+      {
+        "message": "Could I get a good email for you?"
+      }
+    ],
+    "id": "12"
+  },
+  {
+    "name": "checking for options",
+    "detection_name": "ok",
+    "value_type": "approval",
+    "uninterruptible": true,
+    "messages": [
+      {
+        "pre_message": "I am gonna go ahead and check for the best matches for you,",
+        "message": "is that ok?"
+      }
+    ],
+    "cooldown": 10,
+    "fulfillment": [
+      {
+        "timing": "triggered",
+        "call_result": "qualified"
+      },
+      {
+        "timing": "performed",
+        "webhook": {
+          "test_headers": {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "Bearer 759978f91ae505ce67e0f3baef57760ef9fe5d2166cb5017aab315a19210a340fe037957cc8e2fbbd34740d75107b2d52adec9d8c2e41c888dd31abdc8e46bcd"
+          },
+          "headers": {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "Bearer ff42e736376b0a5636174b366751176b886e2532628030c81581a482f466532ed8bebe8e32022556bf0aaf0420879da17fb3be66cb21c27d4efde32b6b2e831b"
+          },
+          "mapping": {
+            "values": {
+              "pipeline_success_contact_id": "id",
+              "transfer_1_name": "targets.0.company",
+              "transfer_1_phone": "targets.0.phone_number",
+              "transfer_1_brand": "targets.0.brand",
+              "transfer_1_id": "targets.0.id",
+              "transfer_2_name": "targets.1.company",
+              "transfer_2_phone": "targets.1.phone_number",
+              "transfer_2_brand": "targets.1.brand",
+              "transfer_2_id": "targets.1.id",
+              "transfer_3_name": "targets.2.company",
+              "transfer_3_phone": "targets.2.phone_number",
+              "transfer_3_brand": "targets.3.brand",
+              "transfer_3_id": "targets.2.id",
+              "match_1": "matches.0.company",
+              "match_2": "matches.1.company",
+              "match_3": "matches.2.company",
+              "match_4": "matches.3.company",
+              "match_5": "matches.4.company",
+              "match_names": [
+                "matches.0.company",
+                "matches.1.company",
+                "matches.2.company",
+                "matches.3.company",
+                "matches.4.company",
+                "matches.5.company"
+              ],
+              "selected_action": "action"
+            },
+            "transfer_1_name": "targets.0.company",
+            "transfer_1_phone": "targets.0.phone_number",
+            "transfer_1_brand": "targets.0.brand",
+            "transfer_1_id": "targets.0.id",
+            "transfer_2_name": "targets.1.company",
+            "transfer_2_phone": "targets.1.phone_number",
+            "transfer_2_brand": "targets.1.brand",
+            "transfer_2_id": "targets.1.id",
+            "transfer_3_name": "targets.2.company",
+            "transfer_3_phone": "targets.2.phone_number",
+            "transfer_3_brand": "targets.3.brand",
+            "transfer_3_id": "targets.2.id",
+            "match_1": "matches.0.company",
+            "match_2": "matches.1.company",
+            "match_3": "matches.2.company",
+            "match_4": "matches.3.company",
+            "match_5": "matches.4.company",
+            "match_names": "matches.0.company,matches.1.company,matches.2.company,matches.3.company,matches.4.company,matches.5.company",
+            "selected_action": "action",
+            "pipeline_success_contact_id": "id"
+          },
+          "timeout": 5,
+          "url": "https://api.pipelinesuccess.com/calls/update",
+          "_test_url": "https://rosetta.pipelinesuccess.com/calls/update",
+          "_dev_url": "https://12g99.wiremockapi.cloud/transfer-options",
+          "body": {
+            "id": "{pipeline_success_contact_id}",
+            "phone": "{phone:local_phone}",
+            "email": "{email}",
+            "first_name": "{contact_name}",
+            "last_name": "{contact_last_name}",
+            "search_zip": "{updated zip code/search_zip/ }",
+            "valid_phone_number": true,
+            "call_answered": true,
+            "willing_to_transfer": true,
+            "questions": {
+              "who": "{care recipient}",
+              "when": "{care service timeline}",
+              "days": "{number of weekly care days}",
+              "hours": "{number of daily care hours}",
+              "financing": "{financing method}",
+              "budget": "{budget category/unsure}"
+            },
+            "additional_notes": ""
+          },
+          "body_mapping": {
+            "interests": "updated_interests"
+          }
+        }
+      }
+    ],
+    "id": "13"
+  },
+  {
+    "name": "transfer flow",
+    "conditions": "selected_action = transfer",
+    "goals": [
+      {
+        "name": "spoke to transfer 1",
+        "value_type": "approval",
+        "conditions": "transfer_1_name",
+        "detection_name": "spoke with {transfer_1_name}",
+        "messages": [
+          {
+            "message": "I have {transfer_1_name:words} available. Have you spoken with them previously?"
+          },
+          {
+            "message": "The best match we have for you is {transfer_1_name:words}, did you already speak with them?"
+          },
+          {
+            "message": "have you already spoken with {transfer_1_name:words}?"
+          }
+        ],
+        "goals": [
+          {
+            "name": "agrees to transfer 1",
+            "detection_name": "agree to transfer",
+            "conditions": "spoke to transfer 1 = no",
+            "value_type": "approval",
+            "is_selection": true,
+            "acknowledge": "Sounds good.",
+            "objection_handling": [
+              "It shouldn't take long, they usually answer very quickly"
+            ],
+            "messages": [
+              {
+                "message": "Let me bring them on the line, this should take less than a minute, is that ok?"
+              },
+              {
+                "message": "Can I transfer you to a {transfer_1_name:words} specialist for more information?"
+              },
+              {
+                "message": "Should I go ahead and connect you to a {transfer_1_name:words} representative?"
+              },
+              {
+                "message": "May I transfer you to {transfer_1_name:words}?"
+              }
+            ],
+            "fulfillment": [
+              {
+                "timing": "collected",
+                "conditions": "agrees to transfer 1 = yes",
+                "values": {
+                  "selected partner name": "{transfer_1_name}",
+                  "selected partner phone": "{transfer_1_phone}",
+                  "selected partner brand": "{transfer_1_brand}",
+                  "selected partner id": "{transfer_1_id}"
+                },
+                "trigger": "transfer to representative"
+              }
+            ],
+            "id": "14.1.1"
+          }
+        ],
+        "id": "14.1"
+      },
+      {
+        "name": "spoke to transfer 2",
+        "value_type": "approval",
+        "conditions": "transfer_2_name and selected partner name $is_empty",
+        "detection_name": "spoke with {transfer_2_name}",
+        "messages": [
+          {
+            "message": "Another great option I have for you is {transfer_2_name:words}, did you speak with them?"
+          },
+          {
+            "message": "Did you already speak with {transfer_2_name:words}?"
+          }
+        ],
+        "goals": [
+          {
+            "name": "agrees to transfer 2",
+            "detection_name": "agree to transfer",
+            "conditions": "spoke to transfer 2 = no",
+            "value_type": "approval",
+            "is_selection": true,
+            "acknowledge": "Okay.",
+            "objection_handling": [
+              "It shouldn't take long, they usually answer quickly"
+            ],
+            "messages": [
+              {
+                "message": "Can I transfer you to the {transfer_2_name:words} specialist for more information?"
+              },
+              {
+                "message": "Let me bring them on the line, this should take less than a minute, is that ok?"
+              },
+              {
+                "message": "May I transfer you to {transfer_2_name:words}?"
+              }
+            ],
+            "fulfillment": [
+              {
+                "timing": "collected",
+                "conditions": "agrees to transfer 2 = yes",
+                "values": {
+                  "selected partner name": "{transfer_2_name}",
+                  "selected partner phone": "{transfer_2_phone}",
+                  "selected partner brand": "{transfer_2_brand}",
+                  "selected partner id": "{transfer_2_id}"
+                },
+                "trigger": "transfer to representative"
+              }
+            ],
+            "id": "14.2.1"
+          }
+        ],
+        "id": "14.2"
+      },
+      {
+        "name": "spoke to transfer 3",
+        "value_type": "approval",
+        "conditions": "transfer_3_name and selected partner name $is_empty",
+        "detection_name": "spoke with {transfer_3_name}",
+        "messages": [
+          {
+            "message": "I also have {transfer_3_name:words} available. Have you already spoken with them?"
+          },
+          {
+            "message": "Did you already speak with {transfer_3_name:words}?"
+          }
+        ],
+        "goals": [
+          {
+            "name": "agrees to transfer 3",
+            "detection_name": "agree to transfer",
+            "conditions": "spoke to transfer 3 = no",
+            "value_type": "approval",
+            "is_selection": true,
+            "acknowledge": "Okay.",
+            "objection_handling": [
+              "It shouldn't take long, they usually answer quickly"
+            ],
+            "messages": [
+              "Can I transfer you to the {transfer_3_name} specialist for more information?",
+              "should I go ahead and connect you to one of {transfer_3_name} representatives?",
+              "May I transfer you to {transfer_3_name}?"
+            ],
+            "fulfillment": [
+              {
+                "timing": "collected",
+                "conditions": "agrees to transfer 3 = yes",
+                "values": {
+                  "selected partner name": "{transfer_3_name}",
+                  "selected partner phone": "{transfer_3_phone}",
+                  "selected partner brand": "{transfer_3_brand}",
+                  "selected partner id": "{transfer_3_id}"
+                },
+                "trigger": "transfer to representative"
+              }
+            ],
+            "id": "14.3.1"
+          }
+        ],
+        "id": "14.3"
+      },
+      {
+        "name": "transfer to representative",
+        "priority": -2,
+        "goal_type": "say",
+        "uninterruptible": true,
+        "messages": [
+          {
+            "message": "I'll be right back."
+          }
+        ],
+        "conditions": "selected partner phone",
+        "fulfillment": [
+          {
+            "timing": "triggered_once",
+            "webhook": {
+              "_url": "https://rosetta.pipelinesuccess.com/calls/live_transfer",
+              "url": "https://api.pipelinesuccess.com/calls/live_transfer",
+              "headers": {
+                "authorization": "Bearer ff42e736376b0a5636174b366751176b886e2532628030c81581a482f466532ed8bebe8e32022556bf0aaf0420879da17fb3be66cb21c27d4efde32b6b2e831b",
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "id": "{pipeline_success_contact_id}",
+                "target_id": "{selected partner id}",
+                "willing_to_transfer": true,
+                "reason": "",
+                "notes": "spoke to transfer: No"
+              }
+            }
+          },
+          {
+            "timing": "triggered_once",
+            "values": {
+              "disposition": "transfer-in-progress"
+            },
+            "new_call": {
+              "agent": "pipeline-success-callcenter",
+              "phone_number": "{selected partner phone}",
+              "pre_merge_message": "You are now connected.",
+              "parent_fail_message": "I am sorry but I could not connect you, we will call you back later. Good Bye",
+              "from_number": "{phone}",
+              "contact_name": "{selected partner name:words}",
+              "check_dnc_registry": false,
+              "metadata": {
+                "disposition": "converted",
+                "source_agent": "pipeline-success",
+                "brand": "{selected partner brand:words}",
+                "contact_name": "{selected partner name:words}",
+                "contact_last_name": " ",
+                "client_phone_number": "{phone:local_phone:digits_no_grouping}",
+                "client_first_name": "{contact_name}",
+                "client_last_name": "{contact_last_name}",
+                "client_full_name": "{contact_full_name}",
+                "client zip code": "{search_zip:digits_no_grouping}",
+                "care service timeline": "{care service timeline}",
+                "number of weekly care days": "{number of weekly care days}",
+                "number of daily care hours": "{number of daily care hours}",
+                "budget for senior care": "{budget category}",
+                "pipeline_success_contact_id": "{pipeline_success_contact_id}"
+              },
+              "idle_messages": [
+                {
+                  "text": "Sorry about the delay, I'm working to bring them on the line",
+                  "timeout": 12
+                },
+                {
+                  "text": "It shouldn't be much longer",
+                  "timeout": 22
+                },
+                {
+                  "text": "I'm still waiting for them to answer",
+                  "timeout": 30
+                },
+                {
+                  "text": "It's usually much faster but I am still working on getting them on the line, shouldn't take much longer",
+                  "timeout": 60
+                },
+                {
+                  "text": "Still working on it, thanks for being patient",
+                  "timeout": 60
+                }
+              ]
+            }
+          },
+          {
+            "timing": "performed",
+            "call_result": "converted"
+          }
+        ],
+        "id": "14.4"
+      },
+      {
+        "name": "hold while connecting",
+        "conditions": "selected partner phone",
+        "goal_type": "behave",
+        "priority": -2,
+        "repeat": true,
+        "messages": "The user is waiting for a Great Care Agency specialist to connect, it may take a moment, usually, less than one minute.\nBe nice and reassure them that you're dialing the agency on the other line, while they are waiting and you will connect them in less than a minute.\nYou may answer their questions to the best of your knowledge while they wait. Try to be brief.\n#### If the user says \"thank you\", simply say \"You're welcome.\" (or similar response)\n#### If the user says \"ok\", simply say \"No problem, please hold.\" (or similar response)\n#### If the user says they don't have any questions simply say \"Sounds good, one moment please.\" (or similar response)\n\n#### Also check for relevant responses from the documentation, try to use a new response each time.",
+        "id": "14.5"
+      }
+    ],
+    "id": "14"
+  },
+  {
+    "name": "match flow",
+    "goals": [
+      {
+        "name": "only matches",
+        "conditions": "match_1",
+        "goal_type": "say",
+        "messages": "I have {match_names} but they're not available to speak right now but they will be giving you a call back.  If you're unable to speak with them when they call they will leave a voicemail with their contact information.",
+        "id": "15.1",
+        "fulfillment": [
+          {
+            "timing": "triggered",
+            "call_result": "converted"
+          }
+        ]
+      },
+      {
+        "name": "no matches",
+        "conditions": "selected_action = no_matches or selected_action $is_empty",
+        "goal_type": "say",
+        "messages": "I'm sorry, But we couldn't find a good match for you right now. I will add this to the system and we will be in touch in case something becomes available.",
+        "id": "15.2"
+      },
+      {
+        "name": "end call",
+        "repeat": true,
+        "goal_type": "say_generative",
+        "messages": "There are no other matches to suggested to the customer. Transfers are not allowed. You are not able to transfer. End the call with the customer, end the call by saying \"good bye, have a nice day\".",
+        "id": "15.3"
+      }
+    ],
+    "id": "15"
+  }
+]

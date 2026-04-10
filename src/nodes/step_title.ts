@@ -1,4 +1,5 @@
 import { getNodeType, mergeAttributes, Node } from "@tiptap/core";
+import { Node as PMNode } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 
 import { findParentStepNode, whenSelected } from "../lib/editor-utils";
@@ -13,15 +14,19 @@ export const StepTitleNode = Node.create({
     return {
       Enter: whenSelected(this.name, ({ editor, node, pos }) => {
         const step = findParentStepNode(editor.state.selection);
-        if (step && !["say", "composer"].includes(step.node.child(1).type.name)) {
-          editor.commands.insertContentAt(
-            pos + node.nodeSize,
-            getNodeType("say", editor.schema).createAndFill(),
-          );
+        if (!step) return true;
+
+        let insertPos = pos + node.nodeSize;
+        let insertContent: PMNode | null = null;
+        if (editor.state.selection.$from.parentOffset === 0) {
+          insertPos = step.pos;
+          insertContent = getNodeType("step", editor.schema).createAndFill();
+        } else if (!["say", "composer"].includes(step.node.child(1).type.name)) {
+          insertContent = getNodeType("say", editor.schema).createAndFill();
         }
-        editor.commands.setTextSelection(
-          TextSelection.near(editor.state.doc.resolve(pos + node.nodeSize)),
-        );
+        if (insertContent) editor.commands.insertContentAt(insertPos, insertContent);
+
+        editor.commands.setTextSelection(TextSelection.near(editor.state.doc.resolve(insertPos)));
         editor.commands.selectTextblockEnd();
         return true;
       }),

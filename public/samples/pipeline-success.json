@@ -1,0 +1,526 @@
+[
+  {
+    "name": "speak on behalf",
+    "condition": "speaker_verification = no",
+    "say": "So would you be the right person to speak to on behalf of {contact_name}?",
+    "fields": [
+      {
+        "name": "speak_on_behalf",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "speak_on_behalf = false",
+        "target": "hang up"
+      }
+    ]
+  },
+  {
+    "name": "still looking for care",
+    "say": "My name is {%agent_name%}, I'm an advisor with Care-In-Homes. Are you still looking for care?",
+    "fields": [
+      {
+        "name": "still_looking_for_care",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "outcome": "contact_verified",
+    "transitions": [
+      {
+        "condition": "still_looking_for_care = true",
+        "target": "search zip"
+      }
+    ]
+  },
+  {
+    "name": "client not interested",
+    "say": "Ok, Thank you for your time and please feel free to call us in the future should your care needs change!",
+    "outcome": "disqualified",
+    "transitions": [
+      {
+        "target": "hang up"
+      }
+    ]
+  },
+  {
+    "name": "search zip",
+    "say": "Would you please share the zip code where you need care?",
+    "instruction": "If the user objects: \"This information is needed for us to offer you the most suitable service provider.\"",
+    "fields": [
+      {
+        "name": "search_zip",
+        "type": "string",
+        "enum": [],
+        "description": "Zip code where care is needed. Must be 5-6 digits (range 11111-999999)."
+      }
+    ]
+  },
+  {
+    "name": "zip code verification",
+    "say": "I just need to confirm — is the zip code where you need care {search_zip:digits_no_grouping}?",
+    "fields": [
+      {
+        "name": "zip_code_confirmed",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "zip_code_confirmed = true",
+        "say": "Thank you, I'll update our records.",
+        "target": "care recipient"
+      },
+      {
+        "condition": "zip_code_confirmed = false",
+        "say": "Oh ok,",
+        "target": "updated zip code"
+      }
+    ]
+  },
+  {
+    "name": "updated zip code",
+    "say": "Would you please share the correct zip code?",
+    "instruction": "If the user objects: \"We just need it for us to offer you the best care options.\"",
+    "fields": [
+      {
+        "name": "search_zip",
+        "type": "string",
+        "enum": [],
+        "description": "Corrected zip code where care is needed. Must be 5-6 digits (range 11111-999999)."
+      }
+    ],
+    "transitions": [
+      {
+        "say": "Thank you, I'll get that updated.",
+        "target": "care recipient"
+      }
+    ]
+  },
+  {
+    "name": "care recipient",
+    "say": "Who is the care for? Mother, father, spouse, self or other?",
+    "fields": [
+      {
+        "name": "care_recipient",
+        "type": "string",
+        "enum": ["Mother", "Father", "Spouse", "Self", "Other"]
+      }
+    ]
+  },
+  {
+    "name": "type of services",
+    "say": "Are you looking for in-home care, assisted living, or both?",
+    "fields": [
+      {
+        "name": "type_of_services",
+        "type": "string",
+        "enum": ["in-home", "assisted-living", "both"],
+        "description": "The type of care service the user is looking for."
+      }
+    ]
+  },
+  {
+    "name": "care service timeline",
+    "say": "Just a couple more quick questions. Are you looking to start services immediately, within 30 days, or over 30 days?",
+    "instruction": "If the user objects: \"This will help me understand your urgency.\"",
+    "fields": [
+      {
+        "name": "care_service_timeline",
+        "type": "string",
+        "enum": ["Immediately", "Within 30 days", "Just gathering information"],
+        "description": "When the user wants to start care. If user says 'over 30 days', return 'Just gathering information'."
+      }
+    ]
+  },
+  {
+    "name": "number of weekly care days",
+    "disabled": true,
+    "say": "How many days of care are needed each week?",
+    "instruction": "If the user objects: \"I won't be able to help you without knowing the required number of days.\"",
+    "fields": [
+      {
+        "name": "number_of_weekly_care_days",
+        "type": "string",
+        "enum": ["3 days or less", "4 or 5 days", "6 or more days"],
+        "description": "Bucket the raw number: 1-3 → '3 days or less', 4-5 → '4 or 5 days', 6-7 → '6 or more days'."
+      }
+    ]
+  },
+  {
+    "name": "number of daily care hours",
+    "disabled": true,
+    "say": "How many hours of care are needed each day?",
+    "instruction": "If the user objects: \"We use this information to find the perfect match for your needs.\"",
+    "fields": [
+      {
+        "name": "number_of_daily_care_hours",
+        "type": "string",
+        "enum": ["Less than 4 hours", "4 to 8 hours", "More than 8 hours"],
+        "description": "Bucket the raw number: <4 → 'Less than 4 hours', 4-8 → '4 to 8 hours', >8 → 'More than 8 hours'."
+      }
+    ]
+  },
+  {
+    "name": "financing method",
+    "say": "How do you plan on paying for care? Private pay, long term care insurance, medicaid, or public assistance?",
+    "fields": [
+      {
+        "name": "financing_method",
+        "type": "string",
+        "enum": [
+          "Private funds",
+          "Long Term Care Insurance",
+          "Medicaid/Public Assistance Only",
+          "Other"
+        ],
+        "description": "Medicaid and Medicare are the same — map both to 'Medicaid/Public Assistance Only'."
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "financing_method = Medicaid/Public Assistance Only",
+        "target": "willing to pay"
+      }
+    ]
+  },
+  {
+    "name": "willing to pay",
+    "say": "Most in-home care services are not covered by insurance, Medicare, Medicaid or public assistance. Paying out-of-pocket is the norm for companion care. Will you be willing to use private funds?",
+    "fields": [
+      {
+        "name": "willing_to_pay",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "willing_to_pay = false",
+        "target": "end call due to payment method"
+      }
+    ]
+  },
+  {
+    "name": "end call due to payment method",
+    "say": "Our partners only accept private pay at this time, you may try calling two-one-one for additional assistance. Have a nice day.",
+    "outcome": "disqualified",
+    "transitions": [
+      {
+        "target": "hang up"
+      }
+    ]
+  },
+  {
+    "name": "budget for care",
+    "disabled": true,
+    "say": "Last question I have: what is your estimated monthly budget for care?",
+    "instruction": "If the user objects: \"We use this information to find the perfect match for your needs.\" If the user has Long Term Care Insurance and says they don't have a budget or don't know, accept that and return 'Long term care insurance'.",
+    "fields": [
+      {
+        "name": "budget_category",
+        "type": "string",
+        "enum": ["Less than $1000", "Over $1000", "Long term care insurance"],
+        "description": "Budget bucket. <$1000 → 'Less than $1000', >=$1000 → 'Over $1000'. If user has LTC insurance and doesn't know, return 'Long term care insurance'."
+      }
+    ]
+  },
+  {
+    "name": "email",
+    "say": "What's the best email address to use?",
+    "fields": [
+      {
+        "name": "email",
+        "type": "string",
+        "enum": [],
+        "description": "The user's email address in format _@_._"
+      }
+    ],
+    "transitions": [
+      {
+        "say": "Got it.",
+        "target": "checking for options"
+      }
+    ]
+  },
+  {
+    "name": "checking for options",
+    "say": "I am gonna go ahead and check for the best matches for you, is that ok?",
+    "fields": [
+      {
+        "name": "ok_to_check",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "outcome": "qualified",
+    "webhook": {
+      "url": "https://api.pipelinesuccess.com/calls/update",
+      "input": {
+        "id": "{pipeline_success_contact_id}",
+        "phone": "{phone:local_phone}",
+        "email": "{email}",
+        "first_name": "{contact_name}",
+        "last_name": "{contact_last_name}",
+        "search_zip": "{search_zip}",
+        "valid_phone_number": true,
+        "call_answered": true,
+        "willing_to_transfer": true,
+        "questions": {
+          "who": "{care_recipient}",
+          "when": "{care_service_timeline}",
+          "days": "{number_of_weekly_care_days}",
+          "hours": "{number_of_daily_care_hours}",
+          "financing": "{financing_method}",
+          "budget": "{budget_category/unsure}"
+        }
+      },
+      "output": {
+        "selected_action": "action",
+        "transfer_1_name": "targets.0.company",
+        "transfer_1_phone": "targets.0.phone_number",
+        "transfer_1_brand": "targets.0.brand",
+        "transfer_1_id": "targets.0.id",
+        "transfer_2_name": "targets.1.company",
+        "transfer_2_phone": "targets.1.phone_number",
+        "transfer_2_brand": "targets.1.brand",
+        "transfer_2_id": "targets.1.id",
+        "transfer_3_name": "targets.2.company",
+        "transfer_3_phone": "targets.2.phone_number",
+        "transfer_3_brand": "targets.2.brand",
+        "transfer_3_id": "targets.2.id",
+        "match_names": "matches.*.company"
+      }
+    },
+    "transitions": [
+      {
+        "condition": "selected_action = transfer",
+        "target": "transfer offer 1"
+      },
+      {
+        "condition": "match_names $any",
+        "target": "only matches"
+      },
+      {
+        "description": "No matches and no transfers available",
+        "target": "no matches"
+      }
+    ]
+  },
+  {
+    "name": "transfer offer 1",
+    "condition": "transfer_1_name $any",
+    "say": "I have {transfer_1_name:words} available. Have you spoken with them previously?",
+    "fields": [
+      {
+        "name": "spoke_to_transfer_1",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "spoke_to_transfer_1 = false",
+        "target": "agrees to transfer 1"
+      },
+      {
+        "condition": "spoke_to_transfer_1 = true",
+        "target": "transfer offer 2"
+      }
+    ]
+  },
+  {
+    "name": "agrees to transfer 1",
+    "say": "Let me bring them on the line, this should take less than a minute, is that ok?",
+    "instruction": "If the user objects: \"It shouldn't take long, they usually answer very quickly.\"",
+    "fields": [
+      {
+        "name": "agrees_to_transfer_1",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "agrees_to_transfer_1 = true",
+        "say": "Sounds good.",
+        "target": "transfer to representative"
+      },
+      {
+        "condition": "agrees_to_transfer_1 = false",
+        "target": "transfer offer 2"
+      }
+    ]
+  },
+  {
+    "name": "transfer offer 2",
+    "condition": "transfer_2_name $any",
+    "say": "Another great option I have for you is {transfer_2_name:words}, did you speak with them?",
+    "fields": [
+      {
+        "name": "spoke_to_transfer_2",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "spoke_to_transfer_2 = false",
+        "target": "agrees to transfer 2"
+      },
+      {
+        "condition": "spoke_to_transfer_2 = true",
+        "target": "transfer offer 3"
+      }
+    ]
+  },
+  {
+    "name": "agrees to transfer 2",
+    "say": "Can I transfer you to the {transfer_2_name:words} specialist for more information?",
+    "instruction": "If the user objects: \"It shouldn't take long, they usually answer quickly.\"",
+    "fields": [
+      {
+        "name": "agrees_to_transfer_2",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "agrees_to_transfer_2 = true",
+        "say": "Okay.",
+        "target": "transfer to representative"
+      },
+      {
+        "condition": "agrees_to_transfer_2 = false",
+        "target": "transfer offer 3"
+      }
+    ]
+  },
+  {
+    "name": "transfer offer 3",
+    "condition": "transfer_3_name $any",
+    "say": "I also have {transfer_3_name:words} available. Have you already spoken with them?",
+    "fields": [
+      {
+        "name": "spoke_to_transfer_3",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "spoke_to_transfer_3 = false",
+        "target": "agrees to transfer 3"
+      },
+      {
+        "condition": "spoke_to_transfer_3 = true",
+        "target": "no matches"
+      }
+    ]
+  },
+  {
+    "name": "agrees to transfer 3",
+    "say": "Can I transfer you to the {transfer_3_name:words} specialist for more information?",
+    "instruction": "If the user objects: \"It shouldn't take long, they usually answer quickly.\"",
+    "fields": [
+      {
+        "name": "agrees_to_transfer_3",
+        "type": "boolean",
+        "enum": []
+      }
+    ],
+    "transitions": [
+      {
+        "condition": "agrees_to_transfer_3 = true",
+        "say": "Okay.",
+        "target": "transfer to representative"
+      },
+      {
+        "condition": "agrees_to_transfer_3 = false",
+        "target": "no matches"
+      }
+    ]
+  },
+  {
+    "name": "transfer to representative",
+    "say": "I'll be right back.",
+    "outcome": "converted",
+    "webhook": {
+      "url": "https://api.pipelinesuccess.com/calls/live_transfer",
+      "input": {
+        "id": "{pipeline_success_contact_id}",
+        "target_id": "{selected_partner_id}",
+        "willing_to_transfer": true,
+        "reason": "",
+        "notes": "spoke to transfer: No"
+      },
+      "output": {}
+    },
+    "experimental": {
+      "transfer": {
+        "phone_number": "{selected_partner_phone}",
+        "contact_name": "{selected_partner_name:words}",
+        "pre_merge_message": "You are now connected.",
+        "fail_message": "I am sorry but I could not connect you, we will call you back later. Good Bye",
+        "idle_messages": [
+          {
+            "text": "Sorry about the delay, I'm working to bring them on the line",
+            "timeout": 12
+          },
+          {
+            "text": "It shouldn't be much longer",
+            "timeout": 22
+          },
+          {
+            "text": "I'm still waiting for them to answer",
+            "timeout": 30
+          },
+          {
+            "text": "It's usually much faster but I am still working on getting them on the line, shouldn't take much longer",
+            "timeout": 60
+          },
+          {
+            "text": "Still working on it, thanks for being patient",
+            "timeout": 60
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "hold while connecting",
+    "instruction": "The user is waiting for a care agency specialist to connect. Be nice and reassure them you're dialing the agency on the other line and will connect them in less than a minute.\n\nYou may answer their questions briefly while they wait.\n- If the user says \"thank you\": \"You're welcome.\"\n- If the user says \"ok\": \"No problem, please hold.\"\n- If they have no questions: \"Sounds good, one moment please.\"",
+    "fields": [
+      {
+        "name": "connected_to_representative",
+        "type": "boolean",
+        "enum": [],
+        "description": "Set to true when the transfer completes. This is system-controlled."
+      }
+    ]
+  },
+  {
+    "name": "only matches",
+    "say": "I have {match_names} but they're not available to speak right now but they will be giving you a call back. If you're unable to speak with them when they call they will leave a voicemail with their contact information.",
+    "outcome": "converted"
+  },
+  {
+    "name": "no matches",
+    "say": "I'm sorry, but we couldn't find a good match for you right now. I will add this to the system and we will be in touch in case something becomes available.",
+    "instruction": "There are no other matches to suggest. You are not able to transfer. End the call by saying goodbye.",
+    "transitions": [
+      {
+        "description": "User acknowledges or conversation reaches natural end",
+        "target": "hang up"
+      }
+    ]
+  },
+  {
+    "name": "hang up",
+    "disabled": true
+  }
+]

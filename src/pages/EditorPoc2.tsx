@@ -6,7 +6,7 @@ import EditorMinimap from "../components/EditorMinimap";
 import Editor from "../Editor";
 import { compileFromEditorJson, compileToEditorJson, type Script } from "../lib/script-model";
 
-const SAMPLE_NAMES = ["amanda-2", "amanda-3", "dark-horse-scheduler"];
+const SAMPLE_NAMES = ["amanda-2", "amanda-3", "dark-horse-scheduler", "pipeline-success"];
 
 function isScript(value: unknown): value is Script {
   return !!value && typeof value === "object" && Array.isArray((value as Script).steps);

@@ -8,10 +8,7 @@ type FieldPopupFormProps = {
 };
 
 function parseEnumList(value: string): string[] | undefined {
-  const options = value
-    .split("\n")
-    .map((option) => option.trim())
-    .filter(Boolean);
+  const options = value.split("\n");
   return options.length > 0 ? options : undefined;
 }
 
