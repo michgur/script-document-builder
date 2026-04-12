@@ -128,7 +128,7 @@ function Step({ editor, getPos, node }: NodeViewProps) {
     <NodeViewWrapper className="group mb-4 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] gap-1">
       <ul className="col-span-2 ps-6 text-xs">
         {sources.map(([s, i]) => (
-          <li>
+          <li key={s}>
             <button
               className="flex w-fit cursor-pointer gap-1 rounded-sm px-2 py-1 text-blue-600 opacity-50 hover:bg-blue-50 hover:opacity-100"
               onClick={(e) => {

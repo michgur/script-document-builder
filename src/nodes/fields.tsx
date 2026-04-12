@@ -188,10 +188,6 @@ function FieldChip({ node, updateAttributes, editor }: ReactNodeViewProps) {
           data-field-interactive="true"
           render={<button type="button" />}
           className="min-w-2 cursor-pointer rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-700 ring-selection transition outline-none hover:bg-emerald-200 active:bg-emerald-300"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
         >
           {draft.name || "\u200b"}
         </Ariakit.PopoverDisclosure>

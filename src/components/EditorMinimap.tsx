@@ -39,6 +39,44 @@ function getStepPosByIndex(editor: Editor, targetIndex: number): number | null {
   return foundPos;
 }
 
+function getTopLevelNodeByType(editor: Editor, type: string): { pos: number; size: number } | null {
+  let found: { pos: number; size: number } | null = null;
+
+  editor.state.doc.forEach((node, offset) => {
+    if (!found && node.type.name === type) {
+      found = { pos: offset, size: node.nodeSize };
+    }
+  });
+
+  return found;
+}
+
+function getSectionHeadingByLabel(
+  editor: Editor,
+  label: string,
+): { pos: number; size: number } | null {
+  let found: { pos: number; size: number } | null = null;
+  const target = label.trim().toLowerCase();
+
+  editor.state.doc.forEach((node, offset) => {
+    if (found || node.type.name !== "section_heading") return;
+    const rawLabel = node.attrs["label"];
+    if (typeof rawLabel === "string" && rawLabel.trim().toLowerCase() === target) {
+      found = { pos: offset, size: node.nodeSize };
+    }
+  });
+
+  return found;
+}
+
+function focusNearPos(editor: Editor, pos: number): number {
+  const safePos = Math.max(0, Math.min(pos, editor.state.doc.content.size));
+  const nextSelection = TextSelection.near(editor.state.doc.resolve(safePos));
+  editor.view.dispatch(editor.state.tr.setSelection(nextSelection));
+  editor.view.focus();
+  return nextSelection.from;
+}
+
 function getStepPositions(editor: Editor): number[] {
   const positions: number[] = [];
 
@@ -272,44 +310,110 @@ export default function EditorMinimap({ editor, content }: EditorMinimapProps) {
   return (
     <aside className="sticky top-10 hidden max-h-[calc(100vh-5rem)] w-42 shrink-0 overflow-y-auto py-12 md:block">
       <nav aria-label="Step minimap">
-        <h4 className="mb-1 text-sm font-medium">Script</h4>
-        <ol className="border-s-2 border-zinc-200">
-          {steps.map((step) => {
-            const isActive = step.index === activeIndex;
-            return (
-              <li key={step.index} className="h-6 p-0">
-                <button
-                  type="button"
-                  className={cn(
-                    "size-full overflow-clip rounded-e-md px-2 py-0.5 text-left text-xs text-nowrap text-ellipsis",
-                    isActive
-                      ? "bg-zinc-100 font-medium text-zinc-900"
-                      : "text-zinc-500 hover:bg-zinc-100",
-                  )}
-                  title={step.title}
-                  aria-current={isActive ? "true" : undefined}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    if (!editor) return;
-                    const stepPos = getStepPosByIndex(editor, step.index);
-                    if (stepPos === null) return;
+        <ul className="mb-2 space-y-0.5">
+          <li>
+            <button
+              type="button"
+              className="w-full rounded-md px-2 py-0.5 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                if (!editor) return;
+                const identityNode = getTopLevelNodeByType(editor, "identity");
+                if (!identityNode) return;
 
-                    const titleEndPos = focusStepTitleEnd(editor, stepPos);
-                    if (titleEndPos === null) return;
+                focusNearPos(editor, identityNode.pos + 1);
 
-                    const titlePos = stepPos + 1;
-                    const titleNode = editor.view.nodeDOM(titlePos);
-                    if (titleNode instanceof HTMLElement) {
-                      scrollNodeToTop(titleNode, editor.view.dom);
-                    }
-                  }}
-                >
-                  {step.title}
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+                const identityDom = editor.view.nodeDOM(identityNode.pos);
+                if (identityDom instanceof HTMLElement) {
+                  scrollNodeToTop(identityDom, editor.view.dom);
+                }
+              }}
+            >
+              Identity
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="w-full rounded-md px-2 py-0.5 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                if (!editor) return;
+                const scriptHeading = getSectionHeadingByLabel(editor, "Script");
+                if (!scriptHeading) return;
+
+                focusNearPos(editor, scriptHeading.pos + scriptHeading.size);
+
+                const headingDom = editor.view.nodeDOM(scriptHeading.pos);
+                if (headingDom instanceof HTMLElement) {
+                  scrollNodeToTop(headingDom, editor.view.dom);
+                }
+              }}
+            >
+              Script
+            </button>
+          </li>
+          <li>
+            <ul className="ms-2 border-s-2 border-zinc-200">
+              {steps.map((step) => {
+                const isActive = step.index === activeIndex;
+                return (
+                  <li key={step.index} className="h-6 p-0">
+                    <button
+                      type="button"
+                      className={cn(
+                        "size-full overflow-clip rounded-e-md px-2 py-0.5 text-left text-xs text-nowrap text-ellipsis",
+                        isActive
+                          ? "bg-zinc-100 font-medium text-zinc-900"
+                          : "text-zinc-500 hover:bg-zinc-100",
+                      )}
+                      title={step.title}
+                      aria-current={isActive ? "true" : undefined}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        if (!editor) return;
+                        const stepPos = getStepPosByIndex(editor, step.index);
+                        if (stepPos === null) return;
+
+                        const titleEndPos = focusStepTitleEnd(editor, stepPos);
+                        if (titleEndPos === null) return;
+
+                        const titlePos = stepPos + 1;
+                        const titleNode = editor.view.nodeDOM(titlePos);
+                        if (titleNode instanceof HTMLElement) {
+                          scrollNodeToTop(titleNode, editor.view.dom);
+                        }
+                      }}
+                    >
+                      {step.title}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="w-full rounded-md px-2 py-0.5 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                if (!editor) return;
+                const faqHeading = getSectionHeadingByLabel(editor, "FAQ");
+                if (!faqHeading) return;
+
+                focusNearPos(editor, faqHeading.pos + faqHeading.size);
+
+                const headingDom = editor.view.nodeDOM(faqHeading.pos);
+                if (headingDom instanceof HTMLElement) {
+                  scrollNodeToTop(headingDom, editor.view.dom);
+                }
+              }}
+            >
+              FAQ
+            </button>
+          </li>
+        </ul>
       </nav>
     </aside>
   );

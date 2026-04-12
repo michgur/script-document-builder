@@ -1,526 +1,734 @@
-[
-  {
-    "name": "speak on behalf",
-    "condition": "speaker_verification = no",
-    "say": "So would you be the right person to speak to on behalf of {contact_name}?",
-    "fields": [
-      {
-        "name": "speak_on_behalf",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "speak_on_behalf = false",
-        "target": "hang up"
-      }
-    ]
-  },
-  {
-    "name": "still looking for care",
-    "say": "My name is {%agent_name%}, I'm an advisor with Care-In-Homes. Are you still looking for care?",
-    "fields": [
-      {
-        "name": "still_looking_for_care",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "outcome": "contact_verified",
-    "transitions": [
-      {
-        "condition": "still_looking_for_care = true",
-        "target": "search zip"
-      }
-    ]
-  },
-  {
-    "name": "client not interested",
-    "say": "Ok, Thank you for your time and please feel free to call us in the future should your care needs change!",
-    "outcome": "disqualified",
-    "transitions": [
-      {
-        "target": "hang up"
-      }
-    ]
-  },
-  {
-    "name": "search zip",
-    "say": "Would you please share the zip code where you need care?",
-    "instruction": "If the user objects: \"This information is needed for us to offer you the most suitable service provider.\"",
-    "fields": [
-      {
-        "name": "search_zip",
-        "type": "string",
-        "enum": [],
-        "description": "Zip code where care is needed. Must be 5-6 digits (range 11111-999999)."
-      }
-    ]
-  },
-  {
-    "name": "zip code verification",
-    "say": "I just need to confirm — is the zip code where you need care {search_zip:digits_no_grouping}?",
-    "fields": [
-      {
-        "name": "zip_code_confirmed",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "zip_code_confirmed = true",
-        "say": "Thank you, I'll update our records.",
-        "target": "care recipient"
-      },
-      {
-        "condition": "zip_code_confirmed = false",
-        "say": "Oh ok,",
-        "target": "updated zip code"
-      }
-    ]
-  },
-  {
-    "name": "updated zip code",
-    "say": "Would you please share the correct zip code?",
-    "instruction": "If the user objects: \"We just need it for us to offer you the best care options.\"",
-    "fields": [
-      {
-        "name": "search_zip",
-        "type": "string",
-        "enum": [],
-        "description": "Corrected zip code where care is needed. Must be 5-6 digits (range 11111-999999)."
-      }
-    ],
-    "transitions": [
-      {
-        "say": "Thank you, I'll get that updated.",
-        "target": "care recipient"
-      }
-    ]
-  },
-  {
-    "name": "care recipient",
-    "say": "Who is the care for? Mother, father, spouse, self or other?",
-    "fields": [
-      {
-        "name": "care_recipient",
-        "type": "string",
-        "enum": ["Mother", "Father", "Spouse", "Self", "Other"]
-      }
-    ]
-  },
-  {
-    "name": "type of services",
-    "say": "Are you looking for in-home care, assisted living, or both?",
-    "fields": [
-      {
-        "name": "type_of_services",
-        "type": "string",
-        "enum": ["in-home", "assisted-living", "both"],
-        "description": "The type of care service the user is looking for."
-      }
-    ]
-  },
-  {
-    "name": "care service timeline",
-    "say": "Just a couple more quick questions. Are you looking to start services immediately, within 30 days, or over 30 days?",
-    "instruction": "If the user objects: \"This will help me understand your urgency.\"",
-    "fields": [
-      {
-        "name": "care_service_timeline",
-        "type": "string",
-        "enum": ["Immediately", "Within 30 days", "Just gathering information"],
-        "description": "When the user wants to start care. If user says 'over 30 days', return 'Just gathering information'."
-      }
-    ]
-  },
-  {
-    "name": "number of weekly care days",
-    "disabled": true,
-    "say": "How many days of care are needed each week?",
-    "instruction": "If the user objects: \"I won't be able to help you without knowing the required number of days.\"",
-    "fields": [
-      {
-        "name": "number_of_weekly_care_days",
-        "type": "string",
-        "enum": ["3 days or less", "4 or 5 days", "6 or more days"],
-        "description": "Bucket the raw number: 1-3 → '3 days or less', 4-5 → '4 or 5 days', 6-7 → '6 or more days'."
-      }
-    ]
-  },
-  {
-    "name": "number of daily care hours",
-    "disabled": true,
-    "say": "How many hours of care are needed each day?",
-    "instruction": "If the user objects: \"We use this information to find the perfect match for your needs.\"",
-    "fields": [
-      {
-        "name": "number_of_daily_care_hours",
-        "type": "string",
-        "enum": ["Less than 4 hours", "4 to 8 hours", "More than 8 hours"],
-        "description": "Bucket the raw number: <4 → 'Less than 4 hours', 4-8 → '4 to 8 hours', >8 → 'More than 8 hours'."
-      }
-    ]
-  },
-  {
-    "name": "financing method",
-    "say": "How do you plan on paying for care? Private pay, long term care insurance, medicaid, or public assistance?",
-    "fields": [
-      {
-        "name": "financing_method",
-        "type": "string",
-        "enum": [
-          "Private funds",
-          "Long Term Care Insurance",
-          "Medicaid/Public Assistance Only",
-          "Other"
-        ],
-        "description": "Medicaid and Medicare are the same — map both to 'Medicaid/Public Assistance Only'."
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "financing_method = Medicaid/Public Assistance Only",
-        "target": "willing to pay"
-      }
-    ]
-  },
-  {
-    "name": "willing to pay",
-    "say": "Most in-home care services are not covered by insurance, Medicare, Medicaid or public assistance. Paying out-of-pocket is the norm for companion care. Will you be willing to use private funds?",
-    "fields": [
-      {
-        "name": "willing_to_pay",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "willing_to_pay = false",
-        "target": "end call due to payment method"
-      }
-    ]
-  },
-  {
-    "name": "end call due to payment method",
-    "say": "Our partners only accept private pay at this time, you may try calling two-one-one for additional assistance. Have a nice day.",
-    "outcome": "disqualified",
-    "transitions": [
-      {
-        "target": "hang up"
-      }
-    ]
-  },
-  {
-    "name": "budget for care",
-    "disabled": true,
-    "say": "Last question I have: what is your estimated monthly budget for care?",
-    "instruction": "If the user objects: \"We use this information to find the perfect match for your needs.\" If the user has Long Term Care Insurance and says they don't have a budget or don't know, accept that and return 'Long term care insurance'.",
-    "fields": [
-      {
-        "name": "budget_category",
-        "type": "string",
-        "enum": ["Less than $1000", "Over $1000", "Long term care insurance"],
-        "description": "Budget bucket. <$1000 → 'Less than $1000', >=$1000 → 'Over $1000'. If user has LTC insurance and doesn't know, return 'Long term care insurance'."
-      }
-    ]
-  },
-  {
-    "name": "email",
-    "say": "What's the best email address to use?",
-    "fields": [
-      {
-        "name": "email",
-        "type": "string",
-        "enum": [],
-        "description": "The user's email address in format _@_._"
-      }
-    ],
-    "transitions": [
-      {
-        "say": "Got it.",
-        "target": "checking for options"
-      }
-    ]
-  },
-  {
-    "name": "checking for options",
-    "say": "I am gonna go ahead and check for the best matches for you, is that ok?",
-    "fields": [
-      {
-        "name": "ok_to_check",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "outcome": "qualified",
-    "webhook": {
-      "url": "https://api.pipelinesuccess.com/calls/update",
-      "input": {
-        "id": "{pipeline_success_contact_id}",
-        "phone": "{phone:local_phone}",
-        "email": "{email}",
-        "first_name": "{contact_name}",
-        "last_name": "{contact_last_name}",
-        "search_zip": "{search_zip}",
-        "valid_phone_number": true,
-        "call_answered": true,
-        "willing_to_transfer": true,
-        "questions": {
-          "who": "{care_recipient}",
-          "when": "{care_service_timeline}",
-          "days": "{number_of_weekly_care_days}",
-          "hours": "{number_of_daily_care_hours}",
-          "financing": "{financing_method}",
-          "budget": "{budget_category/unsure}"
+{
+  "identity": "You are Ellie from {brand:words}.\nYou are calling in a response to an inquiry for home care that was submitted on {lander/brand/Care in homes:words}\nYou are allowed to answer any question about home care services and solutions in general.\nYou are not allowed to provide any personal account information, specific pricing information and other specifics that are not in the documents. Assure them that you can connect the caller with a specialist to discuss specific pricing instead.\n",
+  "steps": [
+    {
+      "name": "speak on behalf",
+      "condition": "speaker_verification = no",
+      "say": "So would you be the right person to speak to on behalf of {contact_name}?",
+      "fields": [
+        {
+          "name": "speak_on_behalf",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "speak_on_behalf = false",
+          "target": "hang up"
+        }
+      ]
+    },
+    {
+      "name": "still looking for care",
+      "say": "My name is {%agent_name%}, I'm an advisor with Care-In-Homes. Are you still looking for care?",
+      "fields": [
+        {
+          "name": "still_looking_for_care",
+          "type": "boolean"
+        }
+      ],
+      "outcome": "contact_verified",
+      "transitions": [
+        {
+          "condition": "still_looking_for_care = true",
+          "target": "search zip"
+        }
+      ]
+    },
+    {
+      "name": "client not interested",
+      "say": "Ok, Thank you for your time and please feel free to call us in the future should your care needs change!",
+      "outcome": "disqualified",
+      "transitions": [
+        {
+          "target": "hang up"
+        }
+      ]
+    },
+    {
+      "name": "search zip",
+      "say": "Would you please share the zip code where you need care?",
+      "instruction": "If the user objects: \"This information is needed for us to offer you the most suitable service provider.\"",
+      "fields": [
+        {
+          "name": "search_zip",
+          "type": "string",
+          "description": "Zip code where care is needed. Must be 5-6 digits (range 11111-999999)."
+        }
+      ]
+    },
+    {
+      "name": "zip code verification",
+      "say": "I just need to confirm — is the zip code where you need care {search_zip:digits_no_grouping}?",
+      "fields": [
+        {
+          "name": "zip_code_confirmed",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "zip_code_confirmed = true",
+          "say": "Thank you, I'll update our records.",
+          "target": "care recipient"
+        },
+        {
+          "condition": "zip_code_confirmed = false",
+          "say": "Oh ok,",
+          "target": "updated zip code"
+        }
+      ]
+    },
+    {
+      "name": "updated zip code",
+      "say": "Would you please share the correct zip code?",
+      "instruction": "If the user objects: \"We just need it for us to offer you the best care options.\"",
+      "fields": [
+        {
+          "name": "search_zip",
+          "type": "string",
+          "description": "Corrected zip code where care is needed. Must be 5-6 digits (range 11111-999999)."
+        }
+      ],
+      "transitions": [
+        {
+          "say": "Thank you, I'll get that updated.",
+          "target": "care recipient"
+        }
+      ]
+    },
+    {
+      "name": "care recipient",
+      "say": "Who is the care for? Mother, father, spouse, self or other?",
+      "fields": [
+        {
+          "name": "care_recipient",
+          "type": "string",
+          "enum": ["Mother", "Father", "Spouse", "Self", "Other"]
+        }
+      ]
+    },
+    {
+      "name": "type of services",
+      "say": "Are you looking for in-home care, assisted living, or both?",
+      "fields": [
+        {
+          "name": "type_of_services",
+          "type": "string",
+          "enum": ["in-home", "assisted-living", "both"],
+          "description": "The type of care service the user is looking for."
+        }
+      ]
+    },
+    {
+      "name": "care service timeline",
+      "say": "Just a couple more quick questions. Are you looking to start services immediately, within 30 days, or over 30 days?",
+      "instruction": "If the user objects: \"This will help me understand your urgency.\"",
+      "fields": [
+        {
+          "name": "care_service_timeline",
+          "type": "string",
+          "enum": ["Immediately", "Within 30 days", "Just gathering information"],
+          "description": "When the user wants to start care. If user says 'over 30 days', return 'Just gathering information'."
+        }
+      ]
+    },
+    {
+      "name": "number of weekly care days",
+      "disabled": true,
+      "say": "How many days of care are needed each week?",
+      "instruction": "If the user objects: \"I won't be able to help you without knowing the required number of days.\"",
+      "fields": [
+        {
+          "name": "number_of_weekly_care_days",
+          "type": "string",
+          "enum": ["3 days or less", "4 or 5 days", "6 or more days"],
+          "description": "Bucket the raw number: 1-3 → '3 days or less', 4-5 → '4 or 5 days', 6-7 → '6 or more days'."
+        }
+      ]
+    },
+    {
+      "name": "number of daily care hours",
+      "disabled": true,
+      "say": "How many hours of care are needed each day?",
+      "instruction": "If the user objects: \"We use this information to find the perfect match for your needs.\"",
+      "fields": [
+        {
+          "name": "number_of_daily_care_hours",
+          "type": "string",
+          "enum": ["Less than 4 hours", "4 to 8 hours", "More than 8 hours"],
+          "description": "Bucket the raw number: <4 → 'Less than 4 hours', 4-8 → '4 to 8 hours', >8 → 'More than 8 hours'."
+        }
+      ]
+    },
+    {
+      "name": "financing method",
+      "say": "How do you plan on paying for care? Private pay, long term care insurance, medicaid, or public assistance?",
+      "fields": [
+        {
+          "name": "financing_method",
+          "type": "string",
+          "enum": [
+            "Private funds",
+            "Long Term Care Insurance",
+            "Medicaid/Public Assistance Only",
+            "Other"
+          ],
+          "description": "Medicaid and Medicare are the same — map both to 'Medicaid/Public Assistance Only'."
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "financing_method != Medicaid/Public Assistance Only",
+          "target": "email"
+        }
+      ]
+    },
+    {
+      "name": "willing to pay",
+      "say": "Most in-home care services are not covered by insurance, Medicare, Medicaid or public assistance. Paying out-of-pocket is the norm for companion care. Will you be willing to use private funds?",
+      "fields": [
+        {
+          "name": "willing_to_pay",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "willing_to_pay = true",
+          "target": "email"
+        }
+      ]
+    },
+    {
+      "name": "end call due to payment method",
+      "say": "Our partners only accept private pay at this time, you may try calling two-one-one for additional assistance. Have a nice day.",
+      "outcome": "disqualified",
+      "transitions": [
+        {
+          "target": "hang up"
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "say": "What's the best email address to use?",
+      "fields": [
+        {
+          "name": "email",
+          "type": "string",
+          "description": "The user's email address in format '_@_._'. Return null if user refuses to provide an email"
+        }
+      ],
+      "transitions": [
+        {
+          "say": "Got it.",
+          "target": "checking for options"
+        }
+      ]
+    },
+    {
+      "name": "checking for options",
+      "say": "I am gonna go ahead and check for the best matches for you, is that ok?",
+      "fields": [
+        {
+          "name": "ok_to_check",
+          "type": "boolean"
+        }
+      ],
+      "outcome": "qualified",
+      "webhook": {
+        "url": "https://api.pipelinesuccess.com/calls/update",
+        "input": {
+          "id": "{pipeline_success_contact_id}",
+          "phone": "{phone:local_phone}",
+          "email": "{email}",
+          "first_name": "{contact_name}",
+          "last_name": "{contact_last_name}",
+          "search_zip": "{search_zip}",
+          "valid_phone_number": true,
+          "call_answered": true,
+          "willing_to_transfer": true,
+          "question": {
+            "who": "{care_recipient}",
+            "when": "{care_service_timeline}",
+            "days": "{number_of_weekly_care_days}",
+            "hours": "{number_of_daily_care_hours}",
+            "financing": "{financing_method}",
+            "budget": "{budget_category/unsure}"
+          }
+        },
+        "output": {
+          "selected_action": "action",
+          "transfer_1_name": "targets.0.company",
+          "transfer_1_phone": "targets.0.phone_number",
+          "transfer_1_brand": "targets.0.brand",
+          "transfer_1_id": "targets.0.id",
+          "transfer_2_name": "targets.1.company",
+          "transfer_2_phone": "targets.1.phone_number",
+          "transfer_2_brand": "targets.1.brand",
+          "transfer_2_id": "targets.1.id",
+          "transfer_3_name": "targets.2.company",
+          "transfer_3_phone": "targets.2.phone_number",
+          "transfer_3_brand": "targets.2.brand",
+          "transfer_3_id": "targets.2.id",
+          "match_names": "matches.*.company"
         }
       },
-      "output": {
-        "selected_action": "action",
-        "transfer_1_name": "targets.0.company",
-        "transfer_1_phone": "targets.0.phone_number",
-        "transfer_1_brand": "targets.0.brand",
-        "transfer_1_id": "targets.0.id",
-        "transfer_2_name": "targets.1.company",
-        "transfer_2_phone": "targets.1.phone_number",
-        "transfer_2_brand": "targets.1.brand",
-        "transfer_2_id": "targets.1.id",
-        "transfer_3_name": "targets.2.company",
-        "transfer_3_phone": "targets.2.phone_number",
-        "transfer_3_brand": "targets.2.brand",
-        "transfer_3_id": "targets.2.id",
-        "match_names": "matches.*.company"
+      "transitions": [
+        {
+          "condition": "selected_action = transfer",
+          "target": "transfer offer 1"
+        },
+        {
+          "condition": "match_names $any",
+          "target": "only matches"
+        },
+        {
+          "target": "no matches"
+        }
+      ]
+    },
+    {
+      "name": "transfer offer 1",
+      "condition": "transfer_1_name $any",
+      "say": "I have {transfer_1_name:words} available. Have you spoken with them previously?",
+      "fields": [
+        {
+          "name": "spoke_to_transfer_1",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "spoke_to_transfer_1 = true",
+          "target": "transfer offer 2"
+        }
+      ]
+    },
+    {
+      "name": "agrees to transfer 1",
+      "say": "Let me bring them on the line, this should take less than a minute, is that ok?",
+      "instruction": "If the user objects: \"It shouldn't take long, they usually answer very quickly.\"",
+      "fields": [
+        {
+          "name": "agrees_to_transfer_1",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "agrees_to_transfer_1 = true",
+          "say": "Sounds good.",
+          "target": "transfer to representative"
+        },
+        {
+          "condition": "agrees_to_transfer_1 = false",
+          "target": "transfer offer 2"
+        }
+      ]
+    },
+    {
+      "name": "transfer offer 2",
+      "condition": "transfer_2_name $any",
+      "say": "Another great option I have for you is {transfer_2_name:words}, did you speak with them?",
+      "fields": [
+        {
+          "name": "spoke_to_transfer_2",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "spoke_to_transfer_2 = true",
+          "target": "transfer offer 3"
+        }
+      ]
+    },
+    {
+      "name": "agrees to transfer 2",
+      "say": "Can I transfer you to the {transfer_2_name:words} specialist for more information?",
+      "instruction": "If the user objects: \"It shouldn't take long, they usually answer quickly.\"",
+      "fields": [
+        {
+          "name": "agrees_to_transfer_2",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "agrees_to_transfer_2 = true",
+          "say": "Okay.",
+          "target": "transfer to representative"
+        },
+        {
+          "condition": "agrees_to_transfer_2 = false",
+          "target": "transfer offer 3"
+        }
+      ]
+    },
+    {
+      "name": "transfer offer 3",
+      "condition": "transfer_3_name $any",
+      "say": "I also have {transfer_3_name:words} available. Have you already spoken with them?",
+      "fields": [
+        {
+          "name": "spoke_to_transfer_3",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "spoke_to_transfer_3 = true",
+          "target": "no matches"
+        }
+      ]
+    },
+    {
+      "name": "agrees to transfer 3",
+      "say": "Can I transfer you to the {transfer_3_name:words} specialist for more information?",
+      "instruction": "If the user objects: \"It shouldn't take long, they usually answer quickly.\"",
+      "fields": [
+        {
+          "name": "agrees_to_transfer_3",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "agrees_to_transfer_3 = true",
+          "say": "Okay.",
+          "target": "transfer to representative"
+        },
+        {
+          "condition": "agrees_to_transfer_3 = false",
+          "target": "no matches"
+        }
+      ]
+    },
+    {
+      "name": "transfer to representative",
+      "say": "I'll be right back.",
+      "outcome": "converted",
+      "webhook": {
+        "url": "https://api.pipelinesuccess.com/calls/live_transfer",
+        "input": {
+          "id": "{pipeline_success_contact_id}",
+          "target_id": "{selected_partner_id}",
+          "willing_to_transfer": true,
+          "reason": "",
+          "notes": "spoke to transfer: No"
+        },
+        "output": {}
+      },
+      "experimental": {
+        "transfer": {
+          "phone_number": "{selected_partner_phone}",
+          "contact_name": "{selected_partner_name:words}",
+          "pre_merge_message": "You are now connected.",
+          "fail_message": "I am sorry but I could not connect you, we will call you back later. Good Bye",
+          "idle_messages": [
+            {
+              "text": "Sorry about the delay, I'm working to bring them on the line",
+              "timeout": 12
+            },
+            {
+              "text": "It shouldn't be much longer",
+              "timeout": 22
+            },
+            {
+              "text": "I'm still waiting for them to answer",
+              "timeout": 30
+            },
+            {
+              "text": "It's usually much faster but I am still working on getting them on the line, shouldn't take much longer",
+              "timeout": 60
+            },
+            {
+              "text": "Still working on it, thanks for being patient",
+              "timeout": 60
+            }
+          ]
+        }
       }
     },
-    "transitions": [
-      {
-        "condition": "selected_action = transfer",
-        "target": "transfer offer 1"
-      },
-      {
-        "condition": "match_names $any",
-        "target": "only matches"
-      },
-      {
-        "description": "No matches and no transfers available",
-        "target": "no matches"
-      }
-    ]
-  },
-  {
-    "name": "transfer offer 1",
-    "condition": "transfer_1_name $any",
-    "say": "I have {transfer_1_name:words} available. Have you spoken with them previously?",
-    "fields": [
-      {
-        "name": "spoke_to_transfer_1",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "spoke_to_transfer_1 = false",
-        "target": "agrees to transfer 1"
-      },
-      {
-        "condition": "spoke_to_transfer_1 = true",
-        "target": "transfer offer 2"
-      }
-    ]
-  },
-  {
-    "name": "agrees to transfer 1",
-    "say": "Let me bring them on the line, this should take less than a minute, is that ok?",
-    "instruction": "If the user objects: \"It shouldn't take long, they usually answer very quickly.\"",
-    "fields": [
-      {
-        "name": "agrees_to_transfer_1",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "agrees_to_transfer_1 = true",
-        "say": "Sounds good.",
-        "target": "transfer to representative"
-      },
-      {
-        "condition": "agrees_to_transfer_1 = false",
-        "target": "transfer offer 2"
-      }
-    ]
-  },
-  {
-    "name": "transfer offer 2",
-    "condition": "transfer_2_name $any",
-    "say": "Another great option I have for you is {transfer_2_name:words}, did you speak with them?",
-    "fields": [
-      {
-        "name": "spoke_to_transfer_2",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "spoke_to_transfer_2 = false",
-        "target": "agrees to transfer 2"
-      },
-      {
-        "condition": "spoke_to_transfer_2 = true",
-        "target": "transfer offer 3"
-      }
-    ]
-  },
-  {
-    "name": "agrees to transfer 2",
-    "say": "Can I transfer you to the {transfer_2_name:words} specialist for more information?",
-    "instruction": "If the user objects: \"It shouldn't take long, they usually answer quickly.\"",
-    "fields": [
-      {
-        "name": "agrees_to_transfer_2",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "agrees_to_transfer_2 = true",
-        "say": "Okay.",
-        "target": "transfer to representative"
-      },
-      {
-        "condition": "agrees_to_transfer_2 = false",
-        "target": "transfer offer 3"
-      }
-    ]
-  },
-  {
-    "name": "transfer offer 3",
-    "condition": "transfer_3_name $any",
-    "say": "I also have {transfer_3_name:words} available. Have you already spoken with them?",
-    "fields": [
-      {
-        "name": "spoke_to_transfer_3",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "spoke_to_transfer_3 = false",
-        "target": "agrees to transfer 3"
-      },
-      {
-        "condition": "spoke_to_transfer_3 = true",
-        "target": "no matches"
-      }
-    ]
-  },
-  {
-    "name": "agrees to transfer 3",
-    "say": "Can I transfer you to the {transfer_3_name:words} specialist for more information?",
-    "instruction": "If the user objects: \"It shouldn't take long, they usually answer quickly.\"",
-    "fields": [
-      {
-        "name": "agrees_to_transfer_3",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "agrees_to_transfer_3 = true",
-        "say": "Okay.",
-        "target": "transfer to representative"
-      },
-      {
-        "condition": "agrees_to_transfer_3 = false",
-        "target": "no matches"
-      }
-    ]
-  },
-  {
-    "name": "transfer to representative",
-    "say": "I'll be right back.",
-    "outcome": "converted",
-    "webhook": {
-      "url": "https://api.pipelinesuccess.com/calls/live_transfer",
-      "input": {
-        "id": "{pipeline_success_contact_id}",
-        "target_id": "{selected_partner_id}",
-        "willing_to_transfer": true,
-        "reason": "",
-        "notes": "spoke to transfer: No"
-      },
-      "output": {}
+    {
+      "name": "hold while connecting",
+      "instruction": "The user is waiting for a care agency specialist to connect. Be nice and reassure them you're dialing the agency on the other line and will connect them in less than a minute.\n\nYou may answer their questions briefly while they wait.\n- If the user says \"thank you\": \"You're welcome.\"\n- If the user says \"ok\": \"No problem, please hold.\"\n- If they have no questions: \"Sounds good, one moment please.\"",
+      "fields": [
+        {
+          "name": "connected_to_representative",
+          "type": "boolean",
+          "description": "Set to true when the transfer completes. This is system-controlled."
+        }
+      ]
     },
-    "experimental": {
-      "transfer": {
-        "phone_number": "{selected_partner_phone}",
-        "contact_name": "{selected_partner_name:words}",
-        "pre_merge_message": "You are now connected.",
-        "fail_message": "I am sorry but I could not connect you, we will call you back later. Good Bye",
-        "idle_messages": [
-          {
-            "text": "Sorry about the delay, I'm working to bring them on the line",
-            "timeout": 12
-          },
-          {
-            "text": "It shouldn't be much longer",
-            "timeout": 22
-          },
-          {
-            "text": "I'm still waiting for them to answer",
-            "timeout": 30
-          },
-          {
-            "text": "It's usually much faster but I am still working on getting them on the line, shouldn't take much longer",
-            "timeout": 60
-          },
-          {
-            "text": "Still working on it, thanks for being patient",
-            "timeout": 60
-          }
-        ]
-      }
+    {
+      "name": "only matches",
+      "say": "I have {match_names} but they're not available to speak right now but they will be giving you a call back. If you're unable to speak with them when they call they will leave a voicemail with their contact information.",
+      "outcome": "converted"
+    },
+    {
+      "name": "no matches",
+      "say": "I'm sorry, but we couldn't find a good match for you right now. I will add this to the system and we will be in touch in case something becomes available.",
+      "instruction": "There are no other matches to suggest. You are not able to transfer. End the call by saying goodbye.",
+      "transitions": [
+        {
+          "description": "User acknowledges or conversation reaches natural end",
+          "target": "hang up"
+        }
+      ]
+    },
+    {
+      "name": "hang up",
+      "disabled": true
     }
-  },
-  {
-    "name": "hold while connecting",
-    "instruction": "The user is waiting for a care agency specialist to connect. Be nice and reassure them you're dialing the agency on the other line and will connect them in less than a minute.\n\nYou may answer their questions briefly while they wait.\n- If the user says \"thank you\": \"You're welcome.\"\n- If the user says \"ok\": \"No problem, please hold.\"\n- If they have no questions: \"Sounds good, one moment please.\"",
-    "fields": [
-      {
-        "name": "connected_to_representative",
-        "type": "boolean",
-        "enum": [],
-        "description": "Set to true when the transfer completes. This is system-controlled."
-      }
-    ]
-  },
-  {
-    "name": "only matches",
-    "say": "I have {match_names} but they're not available to speak right now but they will be giving you a call back. If you're unable to speak with them when they call they will leave a voicemail with their contact information.",
-    "outcome": "converted"
-  },
-  {
-    "name": "no matches",
-    "say": "I'm sorry, but we couldn't find a good match for you right now. I will add this to the system and we will be in touch in case something becomes available.",
-    "instruction": "There are no other matches to suggest. You are not able to transfer. End the call by saying goodbye.",
-    "transitions": [
-      {
-        "description": "User acknowledges or conversation reaches natural end",
-        "target": "hang up"
-      }
-    ]
-  },
-  {
-    "name": "hang up",
-    "disabled": true
-  }
-]
+  ],
+  "faq": [
+    {
+      "question": [
+        "Are they CNAs or nurses?”",
+        "Are they allowed to give shots or pills?",
+        "Are you able to administer medication?",
+        "Are your caregivers nurses?",
+        "Can they do wound care?",
+        "Can you do facelifts?",
+        "Can you guys work with using a colostomy bag?",
+        "Can you help with physical therapry?",
+        "Can you replace a catheter bag?",
+        "Can your caregivers give medication or check vitals?",
+        "Do they handle insulin or other medical routines?",
+        "Do you provide medical care? ",
+        "Do your caregivers have medical training?",
+        "Will they do injections?",
+        "Will you find someone to replace bandages?"
+      ],
+      "answer": "No, our care partners are only able to provide non-medical, companion caregivers."
+    },
+    {
+      "question": [
+        "Do you know how much it would cost for a few hours a day?”",
+        "How much do caregivers charge?",
+        "How much do you charge?",
+        "How much does care cost?",
+        "I don't have a budget. It depends on what they can provide.",
+        "I just want to find how much per hour.",
+        "It depends on how much it costs",
+        "What are your prices like?”",
+        "What's your hourly rates?"
+      ],
+      "answer": "The cost of care is going to depend on a number of variables.  Let me get you matched with an agency who can provide you with their specific pricing based on your care needs."
+    },
+    {
+      "question": ["Are you a skilled facility or unskilled?"],
+      "answer": "No we assist families by searching for non-medical in-home care options. "
+    },
+    {
+      "question": [
+        "Can I use my health insurance to cover the costs?",
+        "Do you take any type of insurance?",
+        "I have Humana",
+        "I'm hoping my insurance will cover it",
+        "Is United Healthcare accepted?"
+      ],
+      "answer": "Our care partners do not accept any form of private insurance for payment. However, out of pocket funds or long-term insurance are accepted."
+    },
+    {
+      "question": ["How expensive is in-home care?", "How much does home care cost?"],
+      "answer": "That's a great question, it's going to depend on a number of factors which is why I recommend speaking with several agencies.  "
+    },
+    {
+      "question": [
+        " Can you take medical Medicare supplemental insurance?",
+        "Can I use Medicaid to pay for in-home care?",
+        "Can I use private insurance?",
+        "Do you accept Medicare Advantage Plans?",
+        "Do you take government insurance or Medicaid?",
+        "Is Medicaid accepted for your services?",
+        "What kind of payment do you accept?",
+        "What kind of public assistance can I use?",
+        "Will Medicaid cover this kind of care?",
+        "do you accept medicaid?",
+        "do you accept medicare or medicaid?"
+      ],
+      "answer": "Most in home care services are not covered by insurance, Medicare, Medicaid or public assistance. Paying out of pocket is the norm for companion care services."
+    },
+    {
+      "question": ["Are you a recording?"],
+      "answer": "I am an AI agent. However, I'd like to just verify a few answers you've provided us and I'll get you connected with a live person. "
+    },
+    {
+      "question": [
+        "Are you from \"Comfort Keepers?\"",
+        "Are you with \"Acti-Kare Cororate?\"",
+        "Are you with \"Always Best Care?\"",
+        "Are you with \"Home Instead?\"",
+        "Are you with \"Visiting Angels?\""
+      ],
+      "answer": "No I am with Care In Homes."
+    },
+    {
+      "question": ["What care options do I have?"],
+      "answer": "I totally understand, figuring out care for the first time can feel overwhelming. Most families start where you are. I can connect you with your local agency to go over those options before you ever make a final decision."
+    },
+    {
+      "question": ["What's involved with public assistance? "],
+      "answer": "Public assistance typically refers to Medicaid or any other state-funded resources."
+    },
+    {
+      "question": [
+        "Why is Care In Homes calling me?",
+        "Why is CareInHomes calling me?",
+        "Why is Karen Holmes calling me?"
+      ],
+      "answer": "I'm calling in response to your request for in home care options."
+    },
+    {
+      "question": ["I was just seeing what this was all about. I run a home care agency."],
+      "answer": "I understand. We are here to assist families who are looking for in-home care services. "
+    },
+    {
+      "question": [
+        "Can you email me this information?",
+        "Can you send all of this in an email to me?",
+        "Can you text me this information?"
+      ],
+      "answer": "Each agency will typically reach out with their information.  If possible, I'd like to see if I can connect you with them right now."
+    },
+    {
+      "question": ["Is Social Security accepted?"],
+      "answer": "All agencies that we partner with only accept private pay and long term insurance payments."
+    },
+    {
+      "question": ["Is your organization Vermont Visiting Nurses?"],
+      "answer": "No, we are Care In Homes."
+    },
+    {
+      "question": [
+        "Can you tell me if in-home care or assisted living makes more sense?",
+        "Do you think assisted living or in-home care would be better?",
+        "How do I know if my loved one needs assisted living instead of in-home help?",
+        "Should I go with assisted living or in home care?",
+        "Would it be better to move them into a facility or keep them at home?"
+      ],
+      "answer": "That’s a very important decision, and it depends on your loved one’s care needs. We can help you explore both in-home care and assisted living options so you can decide what feels right."
+    },
+    {
+      "question": [
+        "Are you close by?",
+        "Where are you headquartered?",
+        "Where is your company?",
+        "where are you guys located?"
+      ],
+      "answer": "We're based out of Virginia but help families all across the country."
+    },
+    {
+      "question": ["Where are they located?", "Where is the agency?"],
+      "answer": "They are a local care partner. We are only searching for someone that is close to you. "
+    },
+    {
+      "question": ["Can you help me with employer verification?"],
+      "answer": "No, it's possible you reached the wrong company. We assist if families that looking for in-home care options."
+    },
+    {
+      "question": ["Are you better than the last agency I worked with?"],
+      "answer": "I'm so sorry to hear that. We pride ourselves on partnering with the best agencies that will help you find the perfect caregiver to have that exceptional experience that you and your loved one deserve."
+    },
+    {
+      "question": ["Do I need to make a decision today?"],
+      "answer": "That’s great! Researching your options is the best way to find the right care for your loved one. Since we work with trusted local agencies that specialize in in-home care, I’d be happy to connect you with one to go over those options. A final decision won’t have to be made today if you’re still considering what’s out there. Would that be helpful?"
+    },
+    {
+      "question": ["I can't talk right now. I'm currently driving."],
+      "answer": "That's completely understandable. I can give you a call back at your earliest convenience - whenever you prefer."
+    },
+    {
+      "question": ["Do you have any agency near me?", "Do you have any caregivers near my city?"],
+      "answer": "I can certainly help check for you. I just need to verify a few pieces of information you provided and I'll see if we have someone local to you. "
+    },
+    {
+      "question": ["Can you give me the agency's phone number?", "What is their phone number?"],
+      "answer": "I do not have their phone number, but I can connect you with someone directly from there and they can provide you all their contact information,."
+    },
+    {
+      "question": ["How do I know which agency to go with?"],
+      "answer": "We recommend speaking to multiple agencies to find the best one for you."
+    },
+    {
+      "question": [
+        "I am an AI agent. However, my goal is to connect you with a live person.",
+        "Are you a real person or a computer?",
+        "Am I speaking with a computer?"
+      ],
+      "answer": "I am an AI agent. However, my goal is to connect you with a live person."
+    },
+    {
+      "question": ["What is companion care?"],
+      "answer": "Companion care consists of non-medical services such as meal preparation, bathing, grooming, medication reminders, and socialization."
+    },
+    {
+      "question": ["How do I pay?", "What payment methods can I use?"],
+      "answer": "Our care partners will accept private pay and long-term insurance."
+    },
+    {
+      "question": ["What agency do you work with?"],
+      "answer": "I don't work for an agency. We are a referral service that will connect you with someone local to you. "
+    },
+    {
+      "question": ["No we are Care In Homes"],
+      "answer": "No we are Care In Homes"
+    },
+    {
+      "question": ["Does it matter if the person getting care is not a senior?"],
+      "answer": "That's no problem at all! Our partners will provide care to those of all ages."
+    },
+    {
+      "question": [
+        "We don’t need full-time care, are you able to offer just a couple hours of care per day?",
+        "What I need is two days a week for a couple hours a day, do you do that?"
+      ],
+      "answer": "That’s perfectly fine! Our care partners offer everything from part time all the way to twenty four seven care.  "
+    },
+    {
+      "question": [
+        "I am still on your website and you already called me immediately",
+        "I appreciate how fast you called.",
+        "I wasn't expecting to get a call so quickly",
+        "Thank you for following up so fast",
+        "That was fast — I just hit submit",
+        "That was quick! I just filled that form out.",
+        "You called me and I am still on the website",
+        "You called me back so quickly",
+        "You guys are on top of it!",
+        "You just called me. Is this about that form I filled out?"
+      ],
+      "answer": "Yes, we like to respond quickly — making sure you get the right care as soon as possible is really important to us!"
+    },
+    {
+      "question": ["Does this cost any money?", "Does this cost money?"],
+      "answer": "Not to consult with my colleagues, that service is free of charge!"
+    },
+    {
+      "question": ["We don't know how we're going to pay. We are still figuring that out."],
+      "answer": "I understand. It's an important choice to consider before you make a final decision. Private pay and long-term insurance are accepted form of payments. I can connect you with a local agency if those would be an option for you. You do not need to make a final decision today."
+    },
+    {
+      "question": ["I need to think about it."],
+      "answer": "No worries, there is no obligation. Why won't you talk to one of our consultants and hear a great offer?"
+    },
+    {
+      "question": ["I'll call them myself"],
+      "answer": "I certainly understand. I don't have their phone number, but I can connect you quickly to gather their contact information if that's okay."
+    },
+    {
+      "question": ["How much is this service?", "Is Care In Homes free?"],
+      "answer": "Care In Homes is an entirely free service. Our only goal is to find you the best caregivers nearby.",
+      "force_response": false
+    },
+    {
+      "question": ["Can you do Dialysis?", "Do you offer Physical Therapy?"],
+      "answer": "No, however our clients will provide companion services such as meal preparation, light housekeeping, bathing, toileting, dressing and standby assistance.",
+      "force_response": false
+    }
+  ]
+}

@@ -83,8 +83,7 @@ export default function EditorPoc2() {
         </div>
         <div className="flex min-h-0 flex-1 items-start justify-center gap-4">
           <EditorMinimap editor={editor} content={content} />
-          <div className="h-full w-full max-w-2xl overflow-x-clip overflow-y-auto rounded-xl bg-white py-12 ps-2 pe-9 shadow-sm ring-1 ring-zinc-200">
-            <h1 className="ms-8 text-3xl font-semibold tracking-tight">Script</h1>
+          <div className="h-full w-full max-w-2xl overflow-x-clip overflow-y-auto rounded-xl bg-white py-9 ps-2 pe-9 shadow-sm ring-1 ring-zinc-200">
             <Editor
               onChange={setContent}
               externalContent={externalContent}

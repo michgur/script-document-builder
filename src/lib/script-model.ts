@@ -25,8 +25,15 @@ export type Step = {
   disabled?: boolean;
 };
 
+export type QnA = {
+  question: string[];
+  answer: string;
+};
+
 export type Script = {
+  identity: string;
   steps: Step[];
+  faq: QnA[];
 };
 
 function textContent(node?: JSONContent): string | null {
@@ -56,6 +63,114 @@ function inlineContent(text: string): JSONContent[] {
       ...(line.length > 0 ? [{ type: "text", text: line }] : []),
       ...(idx < lines.length - 1 ? [{ type: "hardBreak" }] : []),
     ]);
+}
+
+function identityParagraphs(identity: unknown): JSONContent[] {
+  if (typeof identity !== "string") {
+    return [{ type: "paragraph", content: [] }];
+  }
+
+  const normalized = identity.trim();
+  if (normalized.length === 0) {
+    return [{ type: "paragraph", content: [] }];
+  }
+
+  return normalized
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0)
+    .map<JSONContent>((paragraph) => ({
+      type: "paragraph",
+      content: inlineContent(paragraph),
+    }));
+}
+
+function parseIdentity(node?: JSONContent): string {
+  if (!node || node.type !== "identity") return "";
+
+  return (node.content ?? [])
+    .filter((child) => child.type === "paragraph")
+    .map((paragraph) => paragraphContent(paragraph))
+    .filter((paragraph): paragraph is string => paragraph !== null && paragraph.length > 0)
+    .join("\n\n");
+}
+
+function faqItemsContent(rawFaq: unknown): JSONContent[] {
+  if (!Array.isArray(rawFaq)) {
+    return [emptyFaqItem()];
+  }
+
+  const content: JSONContent[] = rawFaq.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+
+    const questions = Array.isArray((entry as QnA).question)
+      ? (entry as QnA).question
+          .filter((item): item is string => typeof item === "string")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+    const answer = typeof (entry as QnA).answer === "string" ? (entry as QnA).answer.trim() : "";
+
+    const firstQuestion = questions[0] ?? "";
+    const variations = questions.slice(1);
+
+    return [
+      {
+        type: "faq_item",
+        attrs: { open: true },
+        content: [
+          { type: "faq_question", content: inlineContent(firstQuestion) },
+          ...variations.map<JSONContent>((question) => ({
+            type: "faq_variation",
+            content: inlineContent(question),
+          })),
+          { type: "faq_answer", content: inlineContent(answer) },
+        ],
+      },
+    ];
+  });
+
+  return content.length > 0 ? content : [emptyFaqItem()];
+}
+
+function parseFaq(node?: JSONContent): QnA[] {
+  if (!node || node.type !== "faq") return [];
+
+  return (node.content ?? [])
+    .filter((child) => child.type === "faq_item")
+    .map<QnA | null>((itemNode) => {
+      const children = itemNode.content ?? [];
+      const firstQuestion = paragraphContent(
+        children.find((child) => child.type === "faq_question"),
+      );
+      const variations = children
+        .filter((child) => child.type === "faq_variation")
+        .map((variation) => paragraphContent(variation))
+        .filter((value): value is string => value !== null && value.length > 0);
+      const answer = paragraphContent(children.find((child) => child.type === "faq_answer")) ?? "";
+
+      const question = [firstQuestion, ...variations].filter(
+        (value): value is string => value !== null && value.length > 0,
+      );
+
+      if (question.length === 0 && answer.length === 0) {
+        return null;
+      }
+
+      return { question, answer };
+    })
+    .filter((item): item is QnA => item !== null);
+}
+
+function emptyFaqItem(): JSONContent {
+  return {
+    type: "faq_item",
+    attrs: { open: true },
+    content: [
+      { type: "faq_question", content: [] },
+      { type: "faq_answer", content: [] },
+    ],
+  };
 }
 
 function parseFieldType(rawType: unknown): Field["type"] {
@@ -165,7 +280,7 @@ function parseLegacyCollectFields(stepName: string, nodes: JSONContent[]): Field
 }
 
 export function compileToEditorJson(script: Script): JSONContent {
-  const steps = script.steps.map<JSONContent>((step) => {
+  const steps = (script.steps ?? []).map<JSONContent>((step) => {
     const content: JSONContent[] = [
       {
         type: "step_title",
@@ -252,20 +367,41 @@ export function compileToEditorJson(script: Script): JSONContent {
 
   return {
     type: "doc",
-    content:
-      steps.length > 0
+    content: [
+      {
+        type: "identity",
+        content: identityParagraphs(script.identity),
+      },
+      {
+        type: "section_heading",
+        attrs: { label: "Script" },
+      },
+      ...(steps.length > 0
         ? steps
         : [
             {
               type: "step",
               content: [{ type: "step_title", content: [] }, { type: "composer" }],
             },
-          ],
+          ]),
+      {
+        type: "section_heading",
+        attrs: { label: "FAQ" },
+      },
+      {
+        type: "faq",
+        content: faqItemsContent(script.faq),
+      },
+    ],
   };
 }
 
 export function compileFromEditorJson(doc: JSONContent): Script {
+  const identityNode = (doc.content ?? []).find((node) => node.type === "identity");
+  const faqNode = (doc.content ?? []).find((node) => node.type === "faq");
+
   return {
+    identity: parseIdentity(identityNode),
     steps: (doc.content ?? [])
       .filter((node) => node.type === "step")
       .map((step) => {
@@ -319,5 +455,6 @@ export function compileFromEditorJson(doc: JSONContent): Script {
         };
       })
       .filter((step) => step !== null),
+    faq: parseFaq(faqNode),
   };
 }

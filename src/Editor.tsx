@@ -4,6 +4,7 @@ import Dropcursor from "@tiptap/extension-dropcursor";
 import Focus from "@tiptap/extension-focus";
 import HardBreak from "@tiptap/extension-hard-break";
 import History from "@tiptap/extension-history";
+import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import { useEffect } from "react";
@@ -12,9 +13,12 @@ import { Placeholder } from "./lib/placeholder";
 import { BranchActionNode, BranchCaseNode, BranchConditionNode, BranchNode } from "./nodes/branch";
 import { ComboboxNode } from "./nodes/combobox";
 import { ComposerNode } from "./nodes/composer";
+import { FaqAnswerNode, FaqNode, FaqQuestionNode, FaqVariationNode } from "./nodes/faq";
 import { FieldNode, FieldsNode } from "./nodes/fields";
+import { IdentityNode } from "./nodes/identity";
 import { InstructionNode } from "./nodes/instruction";
 import { SayNode } from "./nodes/say";
+import { SectionHeadingNode } from "./nodes/section_heading";
 import { StepNode } from "./nodes/step";
 import { StepTitleNode } from "./nodes/step_title";
 import {
@@ -29,12 +33,25 @@ import {
 } from "./nodes/transitions";
 
 const StepDocumentNode = Document.extend({
-  content: "step+",
+  content: "identity section_heading step+ section_heading faq",
 });
 
 const initialContent: JSONContent = {
   type: "doc",
   content: [
+    {
+      type: "identity",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "You are a helpful assistant..." }],
+        },
+      ],
+    },
+    {
+      type: "section_heading",
+      attrs: { label: "Script" },
+    },
     {
       type: "step",
       content: [
@@ -49,6 +66,23 @@ const initialContent: JSONContent = {
           ],
         },
         { type: "composer" },
+      ],
+    },
+    {
+      type: "section_heading",
+      attrs: { label: "FAQ" },
+    },
+    {
+      type: "faq",
+      content: [
+        {
+          type: "faq_item",
+          attrs: { open: true },
+          content: [
+            { type: "faq_question", content: [] },
+            { type: "faq_answer", content: [] },
+          ],
+        },
       ],
     },
   ],
@@ -67,8 +101,12 @@ export default function Editor({
     extensions: [
       StepDocumentNode,
       Text,
+      Paragraph,
       HardBreak,
       History,
+      IdentityNode,
+      FaqNode,
+      SectionHeadingNode,
       StepTitleNode,
       SayNode,
       ComposerNode,
@@ -110,6 +148,13 @@ export default function Editor({
               [TransitionDescriptionNode.name]: "AI Condition...",
               [TransitionTargetNode.name]: "Target step...",
               [FieldsNode.name]: "Field name...",
+              [FaqQuestionNode.name]: "What might the user ask?",
+              [FaqVariationNode.name]: "Another way they might ask...",
+              [FaqAnswerNode.name]: "What should the agent answer?",
+              [Paragraph.name]:
+                editor.state.doc.resolve(pos).parent.type.name === "faq"
+                  ? "Common questions and direct answers for the agent to use..."
+                  : "Your agent's persona, what it's allowed to talk about and what to avoid...",
             }[node.type.name] ?? ""
           );
         },

@@ -40,7 +40,7 @@ export const StepTitleNode = Node.create({
           from: step.pos,
           to: step.pos + step.node.nodeSize,
         });
-        editor.commands.setTextSelection(step.pos - 1);
+        editor.commands.setTextSelection(step.pos - 2);
         return true;
       }),
     };

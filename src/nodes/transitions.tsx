@@ -52,7 +52,11 @@ export const TransitionSentenceNode = Node.create({
   },
 });
 
-function transitionSentenceNode(name: string, prefix?: string) {
+function transitionSentenceNode(
+  name: string,
+  prefix?: string,
+  component?: React.FC<ReactNodeViewProps>,
+) {
   return TransitionSentenceNode.extend({
     name,
     addAttributes() {
@@ -62,6 +66,11 @@ function transitionSentenceNode(name: string, prefix?: string) {
         ...(prefix && { prefix: { ...attrs.prefix, default: prefix } }),
       };
     },
+    ...(component && {
+      addNodeView() {
+        return ReactNodeViewRenderer(component);
+      },
+    }),
   });
 }
 
@@ -81,7 +90,7 @@ export const TransitionSummaryNode = SummaryNode.extend({
 });
 export const TransitionConditionNode = transitionSentenceNode("transition_condition", "If");
 export const TransitionDescriptionNode = transitionSentenceNode("transition_description", "When");
-export const TransitionSayNode = transitionSentenceNode("transition_say", "Say");
+export const TransitionSayNode = transitionSentenceNode("transition_say", "Say", TransitionSay);
 
 export const TransitionCaseNode = Node.create({
   name: "transition_case",
@@ -155,6 +164,17 @@ function TransitionSentence({ node }: ReactNodeViewProps) {
         {node.attrs["prefix"]}&nbsp;
       </strong>
       <NodeViewContent />
+    </NodeViewWrapper>
+  );
+}
+
+function TransitionSay({ node }: ReactNodeViewProps) {
+  return (
+    <NodeViewWrapper className="flex items-start">
+      <strong className="font-medium" contentEditable={false}>
+        {node.attrs["prefix"]}&nbsp;
+      </strong>
+      <NodeViewContent className="text-zinc-900" />
     </NodeViewWrapper>
   );
 }

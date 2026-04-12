@@ -56,6 +56,42 @@ export const ComposerNode = Node.create({
     return [
       new Plugin({
         props: {
+          handlePaste: (view, event) => {
+            const { state } = view;
+            const { selection, tr, schema } = state;
+            const parent = selection.$from.parent;
+            if (parent.type.name !== this.name) return false;
+
+            let text = event.clipboardData?.getData("text/plain").trim();
+            if (!text) return false;
+
+            const step = findParentStepNode(selection);
+            if (!step) return false;
+
+            const composerIndex = step.node.children.findIndex((n) => n.type.name === this.name);
+            if (composerIndex === 1) {
+              // step_title + composer
+              const sayNode = getNodeType(SayNode.name, schema).createAndFill(
+                undefined,
+                schema.nodeFromJSON({ type: "text", text }),
+              );
+              if (!sayNode) return true;
+              const pos = step.pos + step.node.child(0).nodeSize;
+              tr.insert(pos, sayNode).setSelection(
+                TextSelection.create(tr.doc, pos + 2 + text.length),
+              );
+              view.dispatch(tr);
+            } else {
+              // step_title + say + composer
+              text = "\n" + text;
+              const pos = step.pos + step.node.child(0).nodeSize + step.node.child(1).nodeSize;
+              tr.insertText(text, pos).setSelection(
+                TextSelection.create(tr.doc, pos + text.length),
+              );
+              view.dispatch(tr);
+            }
+            return true;
+          },
           handleTextInput: (view, _from, _to, text) => {
             const { state } = view;
             const { selection, tr, schema } = state;

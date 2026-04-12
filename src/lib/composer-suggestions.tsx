@@ -18,7 +18,7 @@ import {
 import { FieldsNode } from "../nodes/fields";
 import { InstructionNode } from "../nodes/instruction";
 import { StepNode } from "../nodes/step";
-import { TransitionCaseNode, TransitionNode, TransitionSummaryNode } from "../nodes/transitions";
+import { TransitionCaseNode, TransitionNode } from "../nodes/transitions";
 import { findParentStepNode } from "./editor-utils";
 import { reactSuggestionRenderer } from "./react-suggestion-renderer";
 
@@ -95,12 +95,10 @@ const COMPOSER_SUGGESTIONS: ComposerSuggestionItem[] = [
     icon: SplitIcon,
     run: addToStep(TransitionNode.name, ({ editor }) => {
       const transition = getNodeType(TransitionNode.name, editor.schema);
-      const transitionSummary = getNodeType(TransitionSummaryNode.name, editor.schema);
       const transitionCase = getNodeType(TransitionCaseNode.name, editor.schema);
-      const summary = transitionSummary.createAndFill();
       const firstCase = transitionCase.createAndFill();
-      if (!summary || !firstCase) return null;
-      return transition.createAndFill(undefined, [summary, firstCase]);
+      if (!firstCase) return null;
+      return transition.createAndFill(undefined, firstCase);
     }),
     isAllowed: ({ step }) => step.node.children.every((c) => c.type.name !== "transition"),
   },

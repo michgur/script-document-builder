@@ -65,7 +65,7 @@ export const SayNode = Paragraph.extend({
 
           editor.commands.insertContent(showComposer ? "" : "\n");
           if (showComposer) {
-            editor.commands.setTextSelection(node.nodeSize + pos + 2);
+            editor.commands.setTextSelection(node.nodeSize + pos + 1);
           }
           return true;
         },

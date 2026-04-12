@@ -1,157 +1,240 @@
-[
-  {
-    "name": "good time to schedule",
-    "say": "I'm reaching out to confirm we received your inquiry, and wanted to schedule a time for you to meet with one of our CPAs to dive into your situation a bit further. Is this a good time to get your appointment scheduled?",
-    "instruction": "If the user is hesitant: \"I understand timing can be tricky. This will just take a couple minutes to get scheduled.\"",
-    "fields": [
-      {
-        "name": "good_time_to_schedule",
-        "type": "boolean",
-        "enum": []
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "good_time_to_schedule = true",
-        "target": "collect details intro"
-      },
-      {
-        "condition": "good_time_to_schedule = false",
-        "target": "wants callback"
-      }
-    ]
-  },
-  {
-    "name": "wants callback",
-    "say": "But before I close out your inquiry, is there a better time I can call you back to get you scheduled with one of our CPAs?",
-    "fields": [
-      {
-        "name": "wants_callback",
-        "type": "string",
-        "enum": ["yes", "no", "do it now"],
-        "description": "Whether the user wants a callback at a better time ('yes'), doesn't want to schedule at all ('no'), or changed their mind and wants to proceed now ('do it now')."
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "wants_callback = yes",
-        "say": "Perfect, let me get that scheduled for you.",
-        "target": "schedule callback"
-      },
-      {
-        "condition": "wants_callback = do it now",
-        "target": "collect details intro"
-      },
-      {
-        "condition": "wants_callback = no",
-        "target": "website booking option"
-      }
-    ]
-  },
-  {
-    "name": "website booking option",
-    "say": "No problem, if you change your mind, you can always find some time on our website using the \"Talk to a CPA\" button on the top right. Thank you for your time and have a wonderful day.",
-    "outcome": "disqualified",
-    "transitions": [
-      {
-        "target": "hang up"
-      }
-    ]
-  },
-  {
-    "name": "schedule callback",
-    "disabled": true
-  },
-  {
-    "name": "collect details intro",
-    "say": "First, let's make sure we have all your contact information."
-  },
-  {
-    "name": "confirm name",
-    "disabled": true,
-    "say": "I have your name as {contact_full_name}, is that correct?",
-    "fields": [
-      {
-        "name": "confirmed_name",
-        "type": "boolean",
-        "enum": []
-      }
-    ]
-  },
-  {
-    "name": "confirm email",
-    "say": "And what's the best email address for you?",
-    "instruction": "If we have their email on file as {contact_email}, confirm it: \"I have your email as {contact_email}, is that correct?\" If they correct it, capture the updated email.",
-    "fields": [
-      {
-        "name": "confirmed_email",
-        "type": "string",
-        "enum": [],
-        "description": "The user's confirmed or corrected email address."
-      }
-    ]
-  },
-  {
-    "name": "confirm phone",
-    "say": "And what's the best phone number to reach you?",
-    "instruction": "If we have their phone on file as {contact_phone}, confirm it: \"I have your phone number as {contact_phone}, is that correct?\" If they correct it, capture the updated number.",
-    "fields": [
-      {
-        "name": "confirmed_phone",
-        "type": "string",
-        "enum": [],
-        "description": "The user's confirmed or corrected phone number."
-      }
-    ]
-  },
-  {
-    "name": "proceed to scheduling",
-    "say": "Before we schedule anything, I want to let you know that because we're so close to the April 15 deadline, our CPA availability for new client meetings is extremely limited. While there may be a few openings, it is most likely that a meeting would happen after April 15. Would that be okay?",
-    "instruction": "The user must explicitly agree before you look for slots.\n\nIf user says no: \"I completely understand, and I'm sorry we can't support that timeline right now. Is there anything else we can help you with today?\"\nIf user is not interested: \"Ok, thank you for your time, bye!\"\nIf asked why: \"Our CPAs are fully focused on completing returns for current clients during tax season, so they have very limited capacity to meet with new clients before April 15. Would you still like to schedule a meeting?\"\nIf asked about filing this year: \"We generally do not file new client returns that come in after March 1 by April 15. More commonly, we file an extension.\"\nIf asked what an extension is: \"An extension is an extension of time to file, but not necessarily an extension of time to pay. Typically, a tax payment still needs to be made by April 15, and the return can then usually be filed by October 15.\"",
-    "fields": [
-      {
-        "name": "proceed_to_scheduling",
-        "type": "string",
-        "enum": ["yes", "no", "implicit"],
-        "description": "Whether the user expressed explicit consent to continue and schedule a meeting. 'implicit' for implicit consent."
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "proceed_to_scheduling = yes or proceed_to_scheduling = implicit",
-        "target": "schedule meeting"
-      },
-      {
-        "condition": "proceed_to_scheduling = no",
-        "target": "faqs and call end"
-      }
-    ]
-  },
-  {
-    "name": "schedule meeting",
-    "disabled": true
-  },
-  {
-    "name": "faqs and call end",
-    "say": "Before I let you go, do you have any questions for me that I can help answer?",
-    "instruction": "Answer any questions the user has. After answering, ask if they have additional questions and wait for the answer.\n\nWhen the user has no more questions or is ready to end the call:\n- If a meeting was scheduled: \"You're all set for your meeting on {%meeting_scheduled_time_local%:words}. Thank you and have a wonderful day!\"\n- If no meeting was scheduled: \"Thank you and have a wonderful day!\"",
-    "fields": [
-      {
-        "name": "user_has_more_questions",
-        "type": "boolean",
-        "enum": [],
-        "description": "Whether the user still has questions. Set to false when they confirm they have no more questions or are ready to end the call."
-      }
-    ],
-    "transitions": [
-      {
-        "condition": "user_has_more_questions = false",
-        "target": "hang up"
-      }
-    ]
-  },
-  {
-    "name": "hang up",
-    "disabled": true
-  }
-]
+{
+  "identity": "You are {%agent_name%} from {%company_name%}.\nYou are calling people who submitted an inquiry on our website looking for CPA services to confirm we received their inquiry and schedule a meeting with one of our CPAs.\nYou are allowed to answer any question about general tax and accounting questions, CPA services, scheduling appointments, document upload processes.\nYou are not allowed to provide specific tax advice or estimates, detailed financial analysis, pricing information, specific tax strategies and other specifics that are not in the documents.\nIf the user mentioned a major life event, congradulate them or say you are sorry accordingly.\nDo not use exclamation points.",
+  "faq": [
+    {
+      "question": ["How much will this cost?", "What are your fees?", "What does it cost?"],
+      "answer": "Every engagement is unique, so pricing depends on factors such as your sources of income, states you file in, whether you own a business, your assets, and your marital status. We take an Advisory-First approach with our clients, meaning Tax Planning is included in every engagement. We require at least a once a year meet up with your CPA, before the end of the filing year, so we can capture and identify any strategies that will save you money. Starting fees are fifteen hundred dollars for an individual return and twenty five hundred dollars for a business return. Both increase with complexity. This includes filing the return, filing extensions, audit and identity-theft protection for individual returns, updating quarterly estimated tax payments if applicable, and a dedicated tax planning meeting before year-end. For bookkeeping, fees start at five hundred dollars per month for cash based bookkeeping and increase from there based on complexity."
+    },
+    {
+      "question": [
+        "Do you have CPAs in my city?",
+        "Do you have CPAs in my state?",
+        "Are you local?"
+      ],
+      "answer": "Dark Horse CPAs is a fully remote firm. We match expertise with need, not geography. We do have CPAs across the U.S., so you may have one in your state or city."
+    },
+    {
+      "question": ["Can I meet the CPA in person?", "Do you meet in person?"],
+      "answer": "We're fully remote, so meetings are held virtually. This ensures we can match you with the best CPA regardless of location."
+    },
+    {
+      "question": ["Can I drop off physical documents?", "Do you have an office?"],
+      "answer": "We do everything digitally. This improves workflow, avoids delays, and ensures all documents—returns, notices, income forms—are available to you at any time through our secure portal."
+    },
+    {
+      "question": [
+        "What is the benefit of meeting with the CPA?",
+        "Why should I take this meeting?"
+      ],
+      "answer": "That question kind of depends on what you have going on. I am assuming there is something happening in your life right now that triggered the outreach, and we would just want to go through what that is to see if we can help. Sometimes we can and sometimes we can’t but we always want to give you the opportunity to see if we are mutually a good fit."
+    },
+    {
+      "question": [
+        "I'm I'm not sure if I'm ready for this sort of thing.",
+        "I haven't decided yet"
+      ],
+      "answer": "That question kind of depends on what you have going on. I am assuming there is something happening in your life right now that triggered the outreach, and we would just want to go through what that is to see if we can help. Sometimes we can and sometimes we can’t but we always want to give you the opportunity to see if we are mutually a good fit."
+    },
+    {
+      "question": ["What is the link to send you documents", "I need the link to upload documents"],
+      "answer": "The link to upload documents {%secure_document_portal%}"
+    },
+    {
+      "question": [
+        "Why can’t you meet with new clients before April 15?",
+        "Why can’t you meet with new clients before that?"
+      ],
+      "answer": "Right now, all of our CPAs are heads down during tax season finalizing returns for current clients, so they simply do not have the capacity to take on many new client meetings before the deadline",
+      "force_response": false
+    },
+    {
+      "question": [
+        "If I become a new client now, will you file my return by April 15?",
+        "As a new client, will you file my return by April 15?",
+        "If I am a new client, will you file my return by 15 April? "
+      ],
+      "answer": "Generally, no. We do not typically file new client returns received after March 1 by April 15. In most cases, the next step is to file an extension.",
+      "force_response": false
+    },
+    {
+      "question": [
+        " What is an extension?",
+        "How does an extension work? ",
+        "How will an extension help me?"
+      ],
+      "answer": "An extension gives you more time to file your tax return, but not more time to pay your taxes.\n",
+      "force_response": false
+    },
+    {
+      "question": [" How do you usually handle extensions for new clients?"],
+      "answer": "Generally, we estimate the tax payment that should be made by April 15 and file an extension. Then, after we meet, review everything, and get the return fully under control, we prepare and file the return by the extended deadline.\n",
+      "force_response": false
+    },
+    {
+      "question": ["When is the extended filing deadline?", "When is the extension until? "],
+      "answer": "October 15. So, in simple terms, payment is generally due by April 15, but the return itself can usually be filed by October 15 if an extension is properly filed.\n",
+      "force_response": false
+    },
+    {
+      "question": [
+        "Does the Initial meeting have a cost?",
+        "Does the first meeting have a cost?",
+        "How much does the first meeting cost?",
+        "How much does the initial meeting cost?"
+      ],
+      "answer": "The initial discovery call is complimentary, so there is no cost for that meeting. It’s an opportunity to discuss your needs and how we can assist you",
+      "force_response": false
+    }
+  ],
+  "steps": [
+    {
+      "name": "good time to schedule",
+      "say": "I'm reaching out to confirm we received your inquiry, and wanted to schedule a time for you to meet with one of our CPAs to dive into your situation a bit further. Is this a good time to get your appointment scheduled?",
+      "fields": [
+        {
+          "name": "good_time_to_schedule",
+          "type": "boolean"
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "good_time_to_schedule = true",
+          "target": "collect details intro"
+        }
+      ]
+    },
+    {
+      "name": "wants callback",
+      "say": "But before I close out your inquiry, is there a better time I can call you back to get you scheduled with one of our CPAs?",
+      "fields": [
+        {
+          "name": "wants_callback",
+          "type": "string",
+          "enum": ["yes", "no", "do it now"],
+          "description": "Whether the user wants a callback at a better time ('yes'), doesn't want to schedule at all ('no'), or changed their mind and wants to proceed now ('do it now')."
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "wants_callback = yes",
+          "say": "Perfect, let me get that scheduled for you.",
+          "target": "schedule callback"
+        },
+        {
+          "condition": "wants_callback = do it now",
+          "target": "collect details intro"
+        },
+        {
+          "condition": "wants_callback = no",
+          "target": "website booking option"
+        }
+      ]
+    },
+    {
+      "name": "website booking option",
+      "say": "No problem, if you change your mind, you can always find some time on our website using the \"Talk to a CPA\" button on the top right. Thank you for your time and have a wonderful day.",
+      "outcome": "disqualified",
+      "transitions": [
+        {
+          "target": "hang up"
+        }
+      ]
+    },
+    {
+      "name": "schedule callback",
+      "disabled": true
+    },
+    {
+      "name": "collect details intro",
+      "say": "First, let's make sure we have all your contact information."
+    },
+    {
+      "name": "confirm name",
+      "disabled": true,
+      "say": "I have your name as {contact_full_name}, is that correct?",
+      "fields": [
+        {
+          "name": "confirmed_name",
+          "type": "boolean",
+          "enum": []
+        }
+      ]
+    },
+    {
+      "name": "confirm email",
+      "say": "And what's the best email address for you?",
+      "instruction": "If we have their email on file as {contact_email}, confirm it: \"I have your email as {contact_email}, is that correct?\" If they correct it, capture the updated email.",
+      "fields": [
+        {
+          "name": "confirmed_email",
+          "type": "string",
+          "enum": [],
+          "description": "The user's confirmed or corrected email address."
+        }
+      ]
+    },
+    {
+      "name": "confirm phone",
+      "say": "And what's the best phone number to reach you?",
+      "instruction": "If we have their phone on file as {contact_phone}, confirm it: \"I have your phone number as {contact_phone}, is that correct?\" If they correct it, capture the updated number.",
+      "fields": [
+        {
+          "name": "confirmed_phone",
+          "type": "string",
+          "enum": [],
+          "description": "The user's confirmed or corrected phone number."
+        }
+      ]
+    },
+    {
+      "name": "proceed to scheduling",
+      "say": "Before we schedule anything, I want to let you know that because we're so close to the April 15 deadline, our CPA availability for new client meetings is extremely limited. While there may be a few openings, it is most likely that a meeting would happen after April 15. Would that be okay?",
+      "instruction": "The user must explicitly agree before you look for slots.\n\nIf user says no: \"I completely understand, and I'm sorry we can't support that timeline right now. Is there anything else we can help you with today?\"\nIf user is not interested: \"Ok, thank you for your time, bye!\"\nIf asked why: \"Our CPAs are fully focused on completing returns for current clients during tax season, so they have very limited capacity to meet with new clients before April 15. Would you still like to schedule a meeting?\"\nIf asked about filing this year: \"We generally do not file new client returns that come in after March 1 by April 15. More commonly, we file an extension.\"\nIf asked what an extension is: \"An extension is an extension of time to file, but not necessarily an extension of time to pay. Typically, a tax payment still needs to be made by April 15, and the return can then usually be filed by October 15.\"",
+      "fields": [
+        {
+          "name": "proceed_to_scheduling",
+          "type": "string",
+          "enum": ["yes", "no", "implicit"],
+          "description": "Whether the user expressed explicit consent to continue and schedule a meeting. 'implicit' for implicit consent."
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "proceed_to_scheduling = yes or proceed_to_scheduling = implicit",
+          "target": "schedule meeting"
+        },
+        {
+          "condition": "proceed_to_scheduling = no",
+          "target": "faqs and call end"
+        }
+      ]
+    },
+    {
+      "name": "schedule meeting",
+      "disabled": true
+    },
+    {
+      "name": "faqs and call end",
+      "say": "Before I let you go, do you have any questions for me that I can help answer?",
+      "instruction": "Answer any questions the user has. After answering, ask if they have additional questions and wait for the answer.\n\nWhen the user has no more questions or is ready to end the call:\n- If a meeting was scheduled: \"You're all set for your meeting on {%meeting_scheduled_time_local%:words}. Thank you and have a wonderful day!\"\n- If no meeting was scheduled: \"Thank you and have a wonderful day!\"",
+      "fields": [
+        {
+          "name": "user_has_more_questions",
+          "type": "boolean",
+          "enum": [],
+          "description": "Whether the user still has questions. Set to false when they confirm they have no more questions or are ready to end the call."
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "user_has_more_questions = false",
+          "target": "hang up"
+        }
+      ]
+    },
+    {
+      "name": "hang up",
+      "disabled": true
+    }
+  ]
+}
