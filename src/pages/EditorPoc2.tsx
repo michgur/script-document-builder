@@ -34,7 +34,7 @@ export default function EditorPoc2() {
 
     setIsLoadingSample(true);
     try {
-      const response = await fetch(`samples/${name}.json`);
+      const response = await fetch(`/script-document-builder/samples/${name}.json`);
       if (!response.ok) {
         throw new Error(`Failed loading sample (${response.status})`);
       }
